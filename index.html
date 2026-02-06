@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+      <script src="https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js"></script>
+  </head>
+  <body>
+    <script type="text/javascript">
+      async function main(){
+        let pyodide = await loadPyodide();
+	await pyodide.loadPackage('numpy')
+	await pyodide.loadPackage('scikit-learn')
+	await pyodide.loadPackage('matplotlib')
+	let code = `import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.linear_model import RidgeClassifier
+X, y = load_breast_cancer(return_X_y=True)
+clf = RidgeClassifier().fit(X, y)
+print(clf.score(X, y))
+
+# 1. Generate Data (Sine Wave)
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+
+# 2. Setup Plot
+plt.figure(figsize=(10, 6))
+plt.plot(x, y, label='sin(x)', color='#4CAF50', linewidth=2)
+
+# 3. Styling
+plt.title("Test Plot: Sine Wave")
+plt.xlabel("Time (s)")
+plt.ylabel("Amplitude")
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend()
+
+# 4. Render
+plt.show()`
+        console.log(pyodide.runPython(code));
+      }
+      main();
+    </script>
+  </body>
+</html>
