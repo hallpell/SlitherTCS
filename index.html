@@ -1,44 +1,73 @@
 <!doctype html>
 <html>
   <head>
-      <script src="https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js"></script>
+    <link rel='stylesheet' href='mainStyle.css'>
+    <link rel='stylesheet' href='vendor/codemirror/codemirror.css'>
   </head>
   <body>
+    <button id=runCode onClick='runCode()'>Run</button>
+    <div id=mainContainer>
+      <div id=editor class=flexbox-item></div>
+      <div id=output class=flexbox-item></div>
+      <div id=graphics class=flexbox-item></div>
+    </div>
     <script type="text/javascript">
-      async function main(){
-        let pyodide = await loadPyodide();
-	await pyodide.loadPackage('numpy')
-	await pyodide.loadPackage('scikit-learn')
-	await pyodide.loadPackage('matplotlib')
-	let code = `import numpy as np
-import matplotlib.pyplot as plt
+      async function runCode(){
+          let pyodide = await loadPyodide();
+	  await pyodide.loadPackage('numpy')
+	  await pyodide.loadPackage('scikit-learn')
+	  await pyodide.loadPackage('matplotlib')
+	  
+	  let code = editor.getValue();
 
-from sklearn.datasets import load_breast_cancer
-from sklearn.linear_model import RidgeClassifier
-X, y = load_breast_cancer(return_X_y=True)
-clf = RidgeClassifier().fit(X, y)
-print(clf.score(X, y))
-
-# 1. Generate Data (Sine Wave)
-x = np.linspace(0, 10, 100)
-y = np.sin(x)
-
-# 2. Setup Plot
-plt.figure(figsize=(10, 6))
-plt.plot(x, y, label='sin(x)', color='#4CAF50', linewidth=2)
-
-# 3. Styling
-plt.title("Test Plot: Sine Wave")
-plt.xlabel("Time (s)")
-plt.ylabel("Amplitude")
-plt.grid(True, linestyle='--', alpha=0.7)
-plt.legend()
-
-# 4. Render
-plt.show()`
-        console.log(pyodide.runPython(code));
+	  pyodide.setStdout({
+	      batched: (text) => {
+		  document.getElementById('output').innerHTML += text + "\n"
+	      }
+	  })
+	  pyodide.setStderr({
+	      batched: (text) => {
+		  document.getElementById('output').innerHTML +=
+		      "<span class=outputError>" + text + "</span>\n"
+	      }
+	  })
+          console.log(pyodide.runPython(code));
       }
-      main();
+
+      const container = document.getElementById("graphics")
+
+      const observer = new MutationObserver(mutations => {
+	  for (const m of mutations) {
+	      for (const node of m.addedNodes) {
+		  if (
+		      node.nodeType === Node.ELEMENT_NODE &&
+			  (node.querySelector?.("canvas, svg") ||
+			   node.tagName === "CANVAS" ||
+			   node.tagName === "SVG")
+		  ) {
+		      container.appendChild(node)
+		  }
+	      }
+	  }
+      })
+      
+      observer.observe(document.body, { childList: true })
     </script>
+    <script src='vendor/codemirror/codemirror.js'></script>
+    <script src='vendor/codemirror/mode/python/python.js'></script>
+    <script>
+      const editor = CodeMirror(
+	  document.getElementById("editor"),
+	  {
+	      mode: 'python',
+	      lineNumbers: true,
+	      indentUnit: 2,
+	      tabSize: 2,
+	      indentWithTabs: false,
+	      lineWrapping: false,
+	  });
+    </script>
+	      
   </body>
 </html>
