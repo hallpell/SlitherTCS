@@ -6,24 +6,20 @@
     <link rel='stylesheet' href='vendor/codemirror/codemirror.css'>
   </head>
   <body>
-    <button id=runCode onClick='runCode()'>Run</button>
+    <button id=runCode>Run</button>
     <div id=mainContainer>
       <div id=editor class=flexbox-item></div>
-      <div id=output class=flexbox-item></div>
+      <pre id=output class=flexbox-item></pre>
       <div id=graphics class=flexbox-item></div>
     </div>
     <script type="text/javascript">
-      async function runCode(){
-          let pyodide = await loadPyodide();
-	  await pyodide.loadPackage('numpy')
-	  await pyodide.loadPackage('scikit-learn')
-	  await pyodide.loadPackage('matplotlib')
+      async function setup() {
+	  console.log("Loading Pyodide")
+	  let pyodide = await loadPyodide();
 	  
-	  let code = editor.getValue();
-
 	  pyodide.setStdout({
 	      batched: (text) => {
-		  document.getElementById('output').innerHTML += text + "\n"
+		  document.getElementById('output').textContent += text + "\n"
 	      }
 	  })
 	  pyodide.setStderr({
@@ -32,8 +28,19 @@
 		      "<span class=outputError>" + text + "</span>\n"
 	      }
 	  })
-          console.log(pyodide.runPython(code));
+	  
+	  async function runCode(){
+	      console.log("Starting to run code")
+	      
+	      let code = editor.getValue();
+	      await pyodide.loadPackagesFromImports(code);
+	      
+              pyodide.runPython(code);
+	  }
+	  document.getElementById("runCode").addEventListener("click", runCode);
       }
+
+      setup();
 
       const container = document.getElementById("graphics")
 

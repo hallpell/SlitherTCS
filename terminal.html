@@ -1,0 +1,150 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js"></script>
+    <link rel='stylesheet' href='terminal.css'>
+    <link rel='stylesheet' href='vendor/codemirror/codemirror.css'>
+  </head>
+  <body>
+    <button id=runCode>Run</button>
+    <div id=mainContainer>
+      <div id=editor class=flexbox-item></div>
+      <div id=outputBox class=flexbox-item>
+	<div id=output></div>
+	<input id="repl-input" autocomplete="off"></input>
+      </div>
+      <div id=graphics class=flexbox-item></div>
+    </div>
+
+
+    <script type="text/javascript">
+      async function setup() {
+	  console.log("Loading Pyodide")
+	  const pyodide = await loadPyodide();
+
+	  let output = document.getElementById("output");
+	  output.textContent = ">>>";
+	  
+	  pyodide.setStdout({
+	      batched: (text) => {
+		  output.textContent += text + "\n"
+		  output.scrollTop = output.scrollHeight;  // autoscroll
+	      }
+	  })
+	  pyodide.setStderr({
+	      batched: (text) => {
+		  output.textContext += "<span class=outputError>" + text + "</span>\n"
+		  output.scrollTop = output.scrollHeight;  // autoscroll
+	      }
+	  })
+
+	  // how we run code with our pyodide instance
+	  async function runCode(code){
+	      console.log("Starting to run code")
+	      
+	      await pyodide.loadPackagesFromImports(code);
+
+	      try {
+		  await pyodide.runPython(code);
+	      } catch (err) {
+		  output.textContext += "<span class=outputError>" + err + "</span>\n"
+		  output.scrollTop = output.scrollHeight;  // autoscroll
+	      }
+	  }
+
+	  // terminal REPL stuff
+	  const input = document.getElementById("repl-input");
+
+	  let history = [];
+	  let historyIndex = -1;
+	  let buffer = "";
+	  
+	  function printPrompt() {
+	      document.getElementById("output").textContent += ">>> ";
+	  }
+
+	  
+	  input.addEventListener("keydown", async (e) => {
+	      if (e.key === "Enter") {
+		  const code = input.value;
+		  output.textContent += code + "\n";
+		  
+		  history.push(code);
+		  historyIndex = history.length;
+		  
+		  input.value = "";
+		  await runCode(code);
+		  
+		  printPrompt();
+		  output.scrollTop = output.scrollHeight;
+	      }
+
+	      if (e.key === "ArrowUp") {
+		  if (historyIndex > 0) {
+		      historyIndex--;
+		      input.value = history[historyIndex];
+		  }
+		  e.preventDefault();
+	      }
+
+	      if (e.key === "ArrowDown") {
+		  if (historyIndex < history.length - 1) {
+		      historyIndex++;
+		      input.value = history[historyIndex];
+		  } else {
+		      input.value = "";
+		  }
+		  e.preventDefault();
+	      }
+	  });
+
+
+	  // end terminal REPL stuff
+
+	  // this is for running the code in the editor
+	  async function runEditorCode() {
+	      let code = editor.getValue();
+	      await runCode(code);
+	  }
+
+	  document.getElementById("runCode").addEventListener("click", runEditorCode);
+      }
+
+      setup();
+
+      const container = document.getElementById("graphics")
+
+      const observer = new MutationObserver(mutations => {
+	  for (const m of mutations) {
+	      for (const node of m.addedNodes) {
+		  if (
+		      node.nodeType === Node.ELEMENT_NODE &&
+			  (node.querySelector?.("canvas, svg") ||
+			   node.tagName === "CANVAS" ||
+			   node.tagName === "SVG")
+		  ) {
+		      container.appendChild(node)
+		  }
+	      }
+	  }
+      })
+      
+      observer.observe(document.body, { childList: true })
+    </script>
+    <script src='vendor/codemirror/codemirror.js'></script>
+    <script src='vendor/codemirror/mode/python/python.js'></script>
+    <script>
+      const editor = CodeMirror(
+	  document.getElementById("editor"),
+	  {
+	      mode: 'python',
+	      lineNumbers: true,
+	      indentUnit: 2,
+	      tabSize: 2,
+	      indentWithTabs: false,
+	      lineWrapping: false,
+	  });
+    </script>
+	      
+  </body>
+</html>
