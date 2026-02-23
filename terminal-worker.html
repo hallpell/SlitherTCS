@@ -1,7 +1,6 @@
 <!doctype html>
 <html>
   <head>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js"></script>
     <link rel='stylesheet' href='terminal.css'>
     <link rel='stylesheet' href='vendor/codemirror/codemirror.css'>
   </head>
@@ -18,38 +17,47 @@
 
 
     <script type="text/javascript">
-      async function setup() {
-	  console.log("Loading Pyodide")
-	  const pyodide = await loadPyodide();
+      // initializing our worker
+      const worker = new Worker("worker.js");
 
+      worker.onmessage = (event) => {
+	  const { type, text, result, message } = event.data;
+
+	  switch (type) {
+	  case "stdout":
+	      output.textContent += text + "\n";
+	      output.scrollTop = output.scrollHeight;
+	      break;
+
+	  case "stderr":
+	      output.textContent += "ERROR: " + text + "\n";
+	      output.scrollTop = output.scrollHeight;
+	      break;
+
+	  case "result":
+	      output.textContent += "Result: " + result + "\n";
+	      output.textContent += ">>> ";
+	      output.scrollTop = output.scrollHeight;
+	      break;
+
+	  case "status":
+	      console.log("Status:", message);
+	      break;
+	  }
+      }
+      
+      async function setup() {
 	  let output = document.getElementById("output");
 	  output.textContent = ">>> ";
-	  
-	  pyodide.setStdout({
-	      batched: (text) => {
-		  output.textContent += text + "\n"
-		  output.scrollTop = output.scrollHeight;  // autoscroll
-	      }
-	  })
-	  pyodide.setStderr({
-	      batched: (text) => {
-		  output.textContext += "<span class=outputError>" + text + "</span>\n"
-		  output.scrollTop = output.scrollHeight;  // autoscroll
-	      }
-	  })
 
-	  // how we run code with our pyodide instance
+	  // how we run code with our webworker
 	  async function runCode(code){
-	      console.log("Starting to run code")
+	      console.log("Starting to run code", code)
 	      
-	      await pyodide.loadPackagesFromImports(code);
-
-	      try {
-		  await pyodide.runPython(code);
-	      } catch (err) {
-		  output.textContext += "<span class=outputError>" + err + "</span>\n"
-		  output.scrollTop = output.scrollHeight;  // autoscroll
-	      }
+	      worker.postMessage({
+		  type: "run",
+		  python: code
+	      });
 	  }
 
 	  // terminal REPL stuff

@@ -13,21 +13,20 @@ body {
 #output {
     white-space: pre-wrap;
     font-family: monospace;
-    background: #111;
-    color: #eee;
     padding: 10px;
-    height: 400px;
     overflow-y: auto;
 }
 
 #repl-input {
-    width: 100%;
+    width: calc(100% - 36px);
     font-family: monospace;
-    background: #222;
-    color: #fff;
+    background: #ddd;
     border: none;
     outline: none;
-    padding: 8px;
+    padding: 0px;
+    margin-left: 36px;
+    position: relative;
+    top: -26px;
 }
 
 .flexbox-item {
