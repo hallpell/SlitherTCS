@@ -26,22 +26,39 @@
 	  switch (type) {
 	  case "stdout":
 	      output.textContent += text + "\n";
-	      output.scrollTop = output.scrollHeight;
+	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 	      break;
-
+	      
 	  case "stderr":
-	      output.textContent += "ERROR: " + text + "\n";
-	      output.scrollTop = output.scrollHeight;
+	      // most errors will have a trace through 2 Pyodide files that won't be relevant to
+	      //   the user so we jump to part of the error message that involves the user's code
+	      let userError = text.indexOf('File "<exec>"')
+	      let errorMessage = text
+	      if (userError != -1) {
+		  errorMessage = text.substring(userError);
+	      }
+	      output.textContent += "ERROR: " + errorMessage + "\n>>> ";
+	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 	      break;
-
+	      
 	  case "result":
-	      output.textContent += "Result: " + result + "\n";
+	      if (result) {
+		  // result is usually undefined as we don't use
+		  //   the "return value" of executing python very often
+		  output.textContent += "Result: " + result + "\n";
+	      }
 	      output.textContent += ">>> ";
-	      output.scrollTop = output.scrollHeight;
+	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 	      break;
 
 	  case "status":
 	      console.log("Status:", message);
+	      break;
+
+	  case "incomplete":
+	      console.log("Incomplete line detected");
+	      output.textContent += "... ";
+	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 	      break;
 	  }
       }
@@ -51,11 +68,20 @@
 	  output.textContent = ">>> ";
 
 	  // how we run code with our webworker
-	  async function runCode(code){
-	      console.log("Starting to run code", code)
+	  async function runEditorCode(code){
+	      console.log("Starting to run editor code", code)
 	      
 	      worker.postMessage({
-		  type: "run",
+		  type: "runEditor",
+		  python: code
+	      });
+	  }
+
+	  async function runTerminalCode(code){
+	      console.log("Starting to run terminal code", code)
+
+	      worker.postMessage({
+		  type: "runTerminal",
 		  python: code
 	      });
 	  }
@@ -69,6 +95,7 @@
 	  
 	  function printPrompt() {
 	      document.getElementById("output").textContent += ">>> ";
+	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 	  }
 
 	  
@@ -76,15 +103,16 @@
 	      if (e.key === "Enter") {
 		  const code = inputEl.value;
 		  output.textContent += code + "\n";
+		  document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 		  
 		  history.push(code);
 		  historyIndex = history.length;
 		  
 		  inputEl.value = "";
-		  await runCode(code);
+		  await runTerminalCode(code);
 		  
-		  printPrompt();
-		  output.scrollTop = output.scrollHeight;
+		  //printPrompt();
+		  document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 	      }
 
 	      if (e.key === "ArrowUp") {
@@ -112,7 +140,7 @@
 	  // this is for running the code in the editor
 	  async function runEditorCode() {
 	      let code = editor.getValue();
-	      await runCode(code);
+	      await runEditorCode(code);
 	      printPrompt();
 	  }
 
@@ -121,8 +149,8 @@
 
       setup();
 
+      // if python creates a graphics interface, move it to the graphics tab
       const container = document.getElementById("graphics")
-
       const observer = new MutationObserver(mutations => {
 	  for (const m of mutations) {
 	      for (const node of m.addedNodes) {

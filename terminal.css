@@ -10,11 +10,14 @@ body {
     border: 2px solid black;
 }
 
+#outputBox {
+    overflow-y: auto;
+}
+
 #output {
     white-space: pre-wrap;
     font-family: monospace;
     padding: 10px;
-    overflow-y: auto;
 }
 
 #repl-input {
