@@ -7,10 +7,10 @@ let pyodide;
 async function init() {
     pyodide = await loadPyodide({
 	stdout: (text) => {
-	    self.postMessage({ type: "stdout", text });
+	    self.postMessage({ type: "stdout", message: text });
 	},
 	stderr: (text) => {
-	    self.postMessage({ type: "stderr", text });
+	    self.postMessage({ type: "stderr", message: text });
 	}
     });
 
@@ -31,37 +31,41 @@ self.onmessage = async (event) => {
 
     if (event.data.type === "runEditor") {
 	try {
-	    self.postMessage({ type: "status", message: "loading modules" });
+	    //self.postMessage({ type: "status", message: "loading modules" });
 	    await pyodide.loadPackagesFromImports(event.data.python);
-	    self.postMessage({ type: "status", message: "running" });
+	    //self.postMessage({ type: "status", message: "running" });
 	    
 	    const result = await pyodide.runPythonAsync(event.data.python);
 	    
-	    self.postMessage({ type: "result", result });
+	    self.postMessage({ type: "result", message: result });
 	    self.postMessage({ type: "status", message: "done" });
 	} catch (err) {
-	    self.postMessage({ type: "stderr", text: err.message });
+	    self.postMessage({ type: "stderr", message: err.message });
 	    self.postMessage({ type: "status", message: "error" });
 	}
     } else if (event.data.type === "runTerminal") {
-	self.postMessage({ type: "status", message: "Starting runTermial" });
+	//self.postMessage({ type: "status", message: "Starting runTermial" });
 	terminalBuffer += event.data.python + "\n";
 	pyodide.globals.set("__code_to_evaluate__", terminalBuffer);
 	const readyToExecute = await pyodide.runPythonAsync(`
 replMultiline.is_complete(__code_to_evaluate__)
 `);
+	
 	if (readyToExecute) {
 	    try {
-		self.postMessage({ type: "status", message: "loading modules" });
+		//self.postMessage({ type: "status", message: "loading modules" });
 		await pyodide.loadPackagesFromImports(event.data.python);
-		self.postMessage({ type: "status", message: "running" });
+		//self.postMessage({ type: "status", message: "running" });
 		
 		const result = await pyodide.runPythonAsync(terminalBuffer);
+
+		console.log("In worker result: " + result);
+		console.log("In worker JSON: " + JSON.stringify(result));
 		
-		self.postMessage({ type: "result", result });
+		self.postMessage({ type: "result", message: JSON.stringify(result) });
 		self.postMessage({ type: "status", message: "done" });
 	    } catch (err) {
-		self.postMessage({ type: "stderr", text: err.message });
+		self.postMessage({ type: "stderr", message: err.message });
 		self.postMessage({ type: "status", message: "error" });
 	    }
 	    terminalBuffer = "";

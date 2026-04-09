@@ -21,32 +21,34 @@
       const worker = new Worker("worker.js");
 
       worker.onmessage = (event) => {
-	  const { type, text, result, message } = event.data;
+	  const { type, message } = event.data;
 
 	  switch (type) {
 	  case "stdout":
-	      output.textContent += text + "\n";
+	      output.textContent += message + "\n";
 	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 	      break;
 	      
 	  case "stderr":
 	      // most errors will have a trace through 2 Pyodide files that won't be relevant to
 	      //   the user so we jump to part of the error message that involves the user's code
-	      let userError = text.indexOf('File "<exec>"')
-	      let errorMessage = text
+	      let userError = message.indexOf('File "<exec>"')
+	      let errorMessage = message
 	      if (userError != -1) {
-		  errorMessage = text.substring(userError);
+		  errorMessage = message.substring(userError);
 	      }
 	      output.textContent += "ERROR: " + errorMessage + "\n>>> ";
 	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 	      break;
 	      
 	  case "result":
-	      if (result) {
-		  // result is usually undefined as we don't use
+	      if (message) {
+		  // result is often undefined as we don't use
 		  //   the "return value" of executing python very often
-		  output.textContent += "Result: " + result + "\n";
+		  //   if it isn't present, we skip this and just display another prompt
+		  output.textContent += message + "\n";
 	      }
+	      console.log("Result: " + message);
 	      output.textContent += ">>> ";
 	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 	      break;
