@@ -19,14 +19,44 @@
     <script type="text/javascript">
       // initializing our worker
       const worker = new Worker("worker.js");
+      const output = document.getElementById("output");
 
+      output.addText = (content) => {
+	  let newDiv = document.createElement("div");
+	  newDiv.textContent = content;
+	  output.appendChild(newDiv);
+	  document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
+      }
+
+      output.appendText = (content) => {
+	  if (output.lastElementChild.textContent == ">>> " ||
+	      output.lastElementChild.textContent == "... ") {
+	      output.lastElementChild.textContent += content
+	  } else {
+	      output.addText(content)
+	  }
+      }
+
+      output.addError = (content) => {
+	  let newDiv = document.createElement("div");
+	  let newSpan = document.createElement("span");
+	  newSpan.className = 'outputError';
+	  newSpan.textContent = content;
+	  newDiv.appendChild(newSpan);
+	  output.appendChild(newDiv);
+	  document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
+      }
+
+      output.printPrompt = () => {
+	  output.addText(">>> ");
+      }
+      
       worker.onmessage = (event) => {
 	  const { type, message } = event.data;
 
 	  switch (type) {
 	  case "stdout":
-	      output.textContent += message + "\n";
-	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
+	      output.addText(message);
 	      break;
 	      
 	  case "stderr":
@@ -37,45 +67,51 @@
 	      if (userError != -1) {
 		  errorMessage = message.substring(userError);
 	      }
-	      output.textContent += "ERROR: " + errorMessage + "\n>>> ";
-	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
+	      output.addError(errorMessage);
 	      break;
 	      
 	  case "result":
 	      if (message) {
 		  // result is often undefined as we don't use
 		  //   the "return value" of executing python very often
-		  //   if it isn't present, we skip this and just display another prompt
-		  output.textContent += message + "\n";
+		  //   if it is not present, we skip this and just display another prompt
+		  output.addText(message);
 	      }
 	      console.log("Result: " + message);
-	      output.textContent += ">>> ";
-	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 	      break;
 
 	  case "status":
+	      if (message === "done" || message === "error") {
+		  output.printPrompt();
+	      }
 	      console.log("Status:", message);
 	      break;
 
 	  case "incomplete":
 	      console.log("Incomplete line detected");
-	      output.textContent += "... ";
-	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
+	      output.addText("... ");
 	      break;
 	  }
       }
       
       async function setup() {
 	  let output = document.getElementById("output");
-	  output.textContent = ">>> ";
+	  output.printPrompt();
 
 	  // how we run code with our webworker
 	  async function runEditorCode(code){
 	      console.log("Starting to run editor code", code)
-	      
+
+	      // send a message to reset the interactive console?
 	      worker.postMessage({
-		  type: "runEditor",
-		  python: code
+		  type: "refresh",
+		  python: undefined
+	      });
+						       
+	      worker.postMessage({
+		  type: "run",
+		  python: code,
+		  source: "editor"
 	      });
 	  }
 
@@ -83,8 +119,9 @@
 	      console.log("Starting to run terminal code", code)
 
 	      worker.postMessage({
-		  type: "runTerminal",
-		  python: code
+		  type: "run",
+		  python: code,
+		  source: "terminal"
 	      });
 	  }
 
@@ -95,26 +132,17 @@
 	  let historyIndex = -1;
 	  let buffer = "";
 	  
-	  function printPrompt() {
-	      document.getElementById("output").textContent += ">>> ";
-	      document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
-	  }
-
 	  
 	  inputEl.addEventListener("keydown", async (e) => {
 	      if (e.key === "Enter") {
 		  const code = inputEl.value;
-		  output.textContent += code + "\n";
-		  document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
+		  output.appendText(code);
 		  
 		  history.push(code);
 		  historyIndex = history.length;
 		  
 		  inputEl.value = "";
 		  await runTerminalCode(code);
-		  
-		  //printPrompt();
-		  document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
 	      }
 
 	      if (e.key === "ArrowUp") {
@@ -140,13 +168,13 @@
 	  // end terminal REPL stuff
 
 	  // this is for running the code in the editor
-	  async function runEditorCode() {
+	  async function gatherAndRunEditorCode() {
+	      output.addError("Running file, refreshing environment");
 	      let code = editor.getValue();
 	      await runEditorCode(code);
-	      printPrompt();
 	  }
 
-	  document.getElementById("runCode").addEventListener("click", runEditorCode);
+	  document.getElementById("runCode").addEventListener("click", gatherAndRunEditorCode);
       }
 
       setup();
