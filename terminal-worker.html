@@ -36,7 +36,7 @@
 	      output.addText(content)
 	  }
       }
-
+      
       output.addError = (content) => {
 	  let newDiv = document.createElement("div");
 	  let newSpan = document.createElement("span");
@@ -46,14 +46,33 @@
 	  output.appendChild(newDiv);
 	  document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
       }
-
+      
       output.printPrompt = () => {
 	  output.addText(">>> ");
       }
       
-      worker.onmessage = (event) => {
+      // code to jam turtle graphics into the graphics box
+      const elementFromProps = (map) => {
+	  console.log("Map arg: ", map)
+	  const tag = map.get("tag");
+	  if (!tag) { return document.createTextNode(map.get("tag")); }
+	  
+	  const node = document.createElement(map.get("tag"));
+	  
+	  const pProps = map.get("props")
+	  const props = pProps instanceof Map ? pProps : new Map(Object.entries(pProps))
+	  
+	  for (const [key, value] of props) { node.setAttribute(key, value); }
+	  for (let i = 0; i < map.get("children").length; i++) {
+	      node.appendChild(elementFromProps(new Map(Object.entries(map.get("children")[i]))));
+	  }
+	  
+	  return node;
+      }
+      
+      worker.onmessage = function (event) {
 	  const { type, message } = event.data;
-
+	  
 	  switch (type) {
 	  case "stdout":
 	      output.addText(message);
@@ -62,7 +81,8 @@
 	  case "stderr":
 	      // most errors will have a trace through 2 Pyodide files that won't be relevant to
 	      //   the user so we jump to part of the error message that involves the user's code
-	      let userError = message.indexOf('File "<exec>"')
+	      console.log(message);
+	      let userError = message.indexOf('File "<string>"');
 	      let errorMessage = message
 	      if (userError != -1) {
 		  errorMessage = message.substring(userError);
@@ -72,24 +92,35 @@
 	      
 	  case "result":
 	      if (message) {
-		  // result is often undefined as we don't use
+		  // result is often undefined as we do not use
 		  //   the "return value" of executing python very often
 		  //   if it is not present, we skip this and just display another prompt
 		  output.addText(message);
 	      }
 	      console.log("Result: " + message);
 	      break;
-
+	      
 	  case "status":
 	      if (message === "done" || message === "error") {
 		  output.printPrompt();
 	      }
 	      console.log("Status:", message);
 	      break;
-
+	      
 	  case "incomplete":
 	      console.log("Incomplete line detected");
 	      output.addText("... ");
+	      break;
+	      
+	  case "turtle_graphics":
+	      console.log("Turtle graphics detected");
+	      graphics.innerHTML = elementFromProps(new Map(Object.entries(message))).outerHTML;
+	      break;
+	      
+	  case "stdin_request":
+	      console.log("stdin_request detected")
+	      let val = prompt("Enter input")
+	      worker.postMessage({type: "input-response", value: val});
 	      break;
 	  }
       }
@@ -100,14 +131,16 @@
 
 	  // how we run code with our webworker
 	  async function runEditorCode(code){
-	      console.log("Starting to run editor code", code)
+	      console.log("Starting to run editor code", code);
 
 	      // send a message to reset the interactive console?
 	      worker.postMessage({
 		  type: "refresh",
 		  python: undefined
 	      });
-						       
+
+	      console.log("Actually running");
+	      
 	      worker.postMessage({
 		  type: "run",
 		  python: code,
@@ -179,7 +212,7 @@
 
       setup();
 
-      // if python creates a graphics interface, move it to the graphics tab
+      // if python creates a graphics interface, move it to the graphics tab - this is for matplotlib
       const container = document.getElementById("graphics")
       const observer = new MutationObserver(mutations => {
 	  for (const m of mutations) {

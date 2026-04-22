@@ -18,7 +18,6 @@ def exec_file(inputCode):
     global env
     exec(inputCode, env)
     return True
-    
 
 def refresh():
     global console, env
