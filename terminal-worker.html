@@ -21,7 +21,11 @@
       const output = document.getElementById("output");
       let terminalStatus = 'ready';
       let ourInput = document.getElementById("repl-input");
+      const interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
 
+      worker.postMessage({ type: "init_buffer",
+			   interruptBuffer: interruptBuffer });
+      
       output.addText = (content) => {
 	  let wasFocused = ourInput.contains(document.activeElement);
 	  let newDiv = document.createElement("div");
@@ -83,6 +87,11 @@
       output.printPrompt = () => {
 	  output.addText(">>> ");
       }
+
+      function sendInterrupt() {
+	  Atomics.store(interruptBuffer, 0, 2); // 2 = SIGINT-like signal
+	  Atomics.notify(interruptBuffer, 0);
+      }
       
       // code to jam turtle graphics into the graphics box
       const elementFromProps = (map) => {
@@ -94,7 +103,7 @@
 	  
 	  const pProps = map.get("props")
 	  const props = pProps instanceof Map ? pProps : new Map(Object.entries(pProps))
-	  
+      
 	  for (const [key, value] of props) { node.setAttribute(key, value); }
 	  for (let i = 0; i < map.get("children").length; i++) {
 	      node.appendChild(elementFromProps(new Map(Object.entries(map.get("children")[i]))));
@@ -154,11 +163,10 @@
 	      
 	  case "stdin_request":
 	      console.log("stdin_request detected")
-//			      let val = prompt(message)
 	      output.addText(message);
 	      terminalStatus = 'awaitingInput';
+	      // force the focus on input (which will also make the cursor blink)
 	      ourInput.focus();
-//	      worker.postMessage({type: "input-response", value: val});
 	      break;
 	  }
       }
@@ -250,6 +258,12 @@
 		      inputEl.value = "";
 		  }
 		  e.preventDefault();
+	      }
+
+	      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
+		  e.preventDefault();
+		  console.log("Saw Ctrl+C");
+		  sendInterrupt();
 	      }
 	  });
 

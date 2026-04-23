@@ -3,6 +3,7 @@
 importScripts("https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js");
 
 let pyodide;
+let interruptBuffer;
 //let inputPromiseResolution = null;
 
 async function init() {
@@ -53,6 +54,9 @@ def input(prompt=""):
     return loop.run_until_complete(fut)
 
 builtins.input = input`)
+
+
+
     console.log("Done loading")
 //    pyodide.setDebug(true);
 }
@@ -99,6 +103,12 @@ self.requestInput = function(inputPrompt) {
 self.onmessage = async (event) => {
     await ready;
 
+    if (event.data.type == "init_buffer") {
+	interruptBuffer = event.data.interruptBuffer
+	pyodide.setInterruptBuffer(interruptBuffer);
+	console.log("Interrupt Buffer Connected");
+    }
+    
     if (event.data.type == "refresh") {
 	await pyodide.runPythonAsync(`runner.refresh()`);
 	
