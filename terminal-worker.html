@@ -9,8 +9,7 @@
     <div id=mainContainer>
       <div id=editor class=flexbox-item></div>
       <div id=outputBox class=flexbox-item>
-	<div id="output"></div>
-	<input id="repl-input" autocomplete="off"></input>
+	<div id="output"><input id="repl-input" autocomplete="off"></input></div>
       </div>
       <div id=graphics class=flexbox-item></div>
     </div>
@@ -20,31 +19,65 @@
       // initializing our worker
       const worker = new Worker("worker.js");
       const output = document.getElementById("output");
+      let terminalStatus = 'ready';
+      let ourInput = document.getElementById("repl-input");
 
       output.addText = (content) => {
+	  let wasFocused = ourInput.contains(document.activeElement);
 	  let newDiv = document.createElement("div");
-	  newDiv.textContent = content;
+	  newDiv.className = 'line';
+
+	  let newText = document.createElement("span");
+	  newText.textContent = content;
+
+	  newDiv.append(newText);
 	  output.appendChild(newDiv);
+	  newDiv.appendChild(ourInput);
 	  document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
+	  if (wasFocused) {
+	      ourInput.focus();
+	  }
       }
 
       output.appendText = (content) => {
-	  if (output.lastElementChild.textContent == ">>> " ||
-	      output.lastElementChild.textContent == "... ") {
-	      output.lastElementChild.textContent += content
-	  } else {
-	      output.addText(content)
+	  let wasFocused = ourInput.contains(document.activeElement);
+	  let newText = document.createElement("span");
+	  newText.textContent = content;
+
+	  output.lastElementChild.insertBefore(newText, ourInput);
+	  if (wasFocused) {
+	      ourInput.focus();
+	  }
+      }
+
+      // this just makes the appended text of class 'userInput' to allow recoloring (compared to appendText)
+      output.appendInput = (content) => {
+	  let wasFocused = ourInput.contains(document.activeElement);
+	  let newText = document.createElement("span");
+	  newText.className = 'userInput';
+	  newText.textContent = content;
+
+	  output.lastElementChild.insertBefore(newText, ourInput);
+	  if (wasFocused) {
+	      ourInput.focus();
 	  }
       }
       
       output.addError = (content) => {
+	  let wasFocused = ourInput.contains(document.activeElement);
 	  let newDiv = document.createElement("div");
+	  newDiv.className = 'line';
 	  let newSpan = document.createElement("span");
 	  newSpan.className = 'outputError';
 	  newSpan.textContent = content;
+
 	  newDiv.appendChild(newSpan);
+	  newDiv.appendChild(ourInput);
 	  output.appendChild(newDiv);
 	  document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
+	  if (wasFocused) {
+	      ourInput.focus();
+	  }
       }
       
       output.printPrompt = () => {
@@ -103,6 +136,7 @@
 	  case "status":
 	      if (message === "done" || message === "error") {
 		  output.printPrompt();
+		  terminalStatus = 'ready';
 	      }
 	      console.log("Status:", message);
 	      break;
@@ -110,6 +144,7 @@
 	  case "incomplete":
 	      console.log("Incomplete line detected");
 	      output.addText("... ");
+	      terminalStatus = 'ready';
 	      break;
 	      
 	  case "turtle_graphics":
@@ -119,8 +154,11 @@
 	      
 	  case "stdin_request":
 	      console.log("stdin_request detected")
-	      let val = prompt("Enter input")
-	      worker.postMessage({type: "input-response", value: val});
+//			      let val = prompt(message)
+	      output.addText(message);
+	      terminalStatus = 'awaitingInput';
+	      ourInput.focus();
+//	      worker.postMessage({type: "input-response", value: val});
 	      break;
 	  }
       }
@@ -133,6 +171,8 @@
 	  async function runEditorCode(code){
 	      console.log("Starting to run editor code", code);
 
+	      terminalStatus = 'busy';
+	      
 	      // send a message to reset the interactive console?
 	      worker.postMessage({
 		  type: "refresh",
@@ -151,6 +191,8 @@
 	  async function runTerminalCode(code){
 	      console.log("Starting to run terminal code", code)
 
+	      terminalStatus = 'busy';
+
 	      worker.postMessage({
 		  type: "run",
 		  python: code,
@@ -168,14 +210,28 @@
 	  
 	  inputEl.addEventListener("keydown", async (e) => {
 	      if (e.key === "Enter") {
-		  const code = inputEl.value;
-		  output.appendText(code);
-		  
-		  history.push(code);
-		  historyIndex = history.length;
-		  
-		  inputEl.value = "";
-		  await runTerminalCode(code);
+		  if (terminalStatus == 'ready') {
+		      const code = inputEl.value;
+		      output.appendText(code);
+		      
+		      history.push(code);
+		      historyIndex = history.length;
+		      
+		      inputEl.value = "";
+		      await runTerminalCode(code);
+		  } else if (terminalStatus == 'awaitingInput') {
+		      const response = inputEl.value;
+		      output.appendInput(response);
+
+		      inputEl.value = "";
+		      worker.postMessage({type: "input-response", value: response});
+
+		      terminalStatus = 'ready';
+		  } else if (terminalStatus == 'awaitingIncomplete') {
+		      // not actually using this, delete?
+		  } else {
+		      // pass, terminal status is busy. Think about what UI response should happen
+		  }
 	      }
 
 	      if (e.key === "ArrowUp") {

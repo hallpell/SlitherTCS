@@ -39,7 +39,21 @@ async function init() {
 
     pyodide.FS.writeFile("runner.py", code);
     await pyodide.runPythonAsync(`import runner`);
-    console.log("Succeeded");
+
+    console.log("Overwritting input")
+    await pyodide.runPythonAsync(`import asyncio
+import js
+import builtins
+
+def input(prompt=""):
+    loop = asyncio.get_event_loop()
+    fut = loop.create_future()
+    js._pending_input = fut
+    js.requestInput(prompt)
+    return loop.run_until_complete(fut)
+
+builtins.input = input`)
+    console.log("Done loading")
 //    pyodide.setDebug(true);
 }
 
@@ -78,7 +92,7 @@ let pythonFutures = []
 self.requestInput = function(inputPrompt) {
     self.postMessage({
 	type: "stdin_request",
-	value: inputPrompt
+	message: inputPrompt
     });
 }
 
@@ -86,14 +100,14 @@ self.onmessage = async (event) => {
     await ready;
 
     if (event.data.type == "refresh") {
-	//await pyodide.runPythonAsync(`runner.refresh()`);
-
+	await pyodide.runPythonAsync(`runner.refresh()`);
+	
 	self.postMessage({ type: "status", message: "refreshed" });
     }
 
     if (event.data.type == "input-response") {
 	console.log("Recieved", event.data.value);
-	const resolve = self._pending_inputs.toJs().pop();
+	const resolve = self._pending_input.toJs();
 	if (resolve) {
 	    resolve.set_result(event.data.value);
 	}
