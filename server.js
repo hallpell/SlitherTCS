@@ -1,3 +1,6 @@
+// first time setup: npm install express
+// start server: `node server.js`
+
 const express = require("express");
 const app = express();
 
