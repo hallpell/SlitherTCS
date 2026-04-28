@@ -1,15 +1,14 @@
-// worker.js
-
 importScripts("https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js");
 
 let pyodide;
 let interruptBuffer;
-//let inputPromiseResolution = null;
 
 async function init() {
     pyodide = await loadPyodide();
 
-    /* emulating stdin by hacking at input
+    /* this may be useful when dealing with STDIN later,
+    // but input is overwritten to not use STDIN (which is the main way
+    // I expect students to interact with STDIN)
     pyodide.setStdin({
 	isatty: true,
 	stdin: () => {
@@ -34,7 +33,8 @@ async function init() {
 	}
     });
 
-    console.log("Hacky python import");
+    // refactor these imports into a wheel once stable
+    console.log("Hacky python import"); 
     const response = await fetch("runner.py");
     const code = await response.text();
 
@@ -58,40 +58,19 @@ builtins.input = input`)
 
 
     console.log("Done loading")
-//    pyodide.setDebug(true);
+    //    pyodide.setDebug(true);
 }
 
 const ready = init();
 
-/* code added for custom turtle workaround */
-//let graphics = document.getElementById("graphics")
-let hasTurtle = false;
+let graphicsWidth;
+let graphicsHeight;
 
+// code for handling turtle
+let hasTurtle = false;
 self.sendTurtleData = (e) => {
     self.postMessage({ type: "turtle_graphics", message: e.toJs ? e.toJs() : e });
 }
-
-/*const fakeBasthonPackage = {
-    kernel: {
-        display_event: (e) => graphics.innerHTML = elementFromProps(e.toJs().get("content")).outerHTML,
-        locals: () => pyodide.runPython("globals()"),
-    },
-};
-
-const elementFromProps = (map) => {
-    const tag = map.get("tag");
-    if (!tag) { return document.createTextNode(map.get("text")); }
-    
-    const node = document.createElement(map.get("tag"));
-    
-    for (const [key, value] of map.get("props")) { node.setAttribute(key, value); }
-    for (const childProps of map.get("children")) { node.appendChild(elementFromProps(childProps)); }
-    
-    return node;
-}*/
-/* end turtle additions */
-
-let pythonFutures = []
 
 self.requestInput = function(inputPrompt) {
     self.postMessage({
@@ -107,6 +86,11 @@ self.onmessage = async (event) => {
 	interruptBuffer = event.data.interruptBuffer
 	pyodide.setInterruptBuffer(interruptBuffer);
 	console.log("Interrupt Buffer Connected");
+    }
+
+    if (event.data.type == "init_graphics") {
+	graphicsWidth = event.data.width;
+	graphicsHeight = event.data.height;
     }
     
     if (event.data.type == "refresh") {
@@ -130,19 +114,27 @@ self.onmessage = async (event) => {
 	    if (event.data.python.includes("turtle") && !hasTurtle) {
 		hasTurtle = true;
 		pyodide.registerJsModule("turtleSender", { send: self.sendTurtleData });
+//		self.postMessage({type: "stdout", message: "importing turtle"});
 		await pyodide.loadPackage('micropip');
 		await pyodide.runPythonAsync(`
 import micropip
-await micropip.install('./vendor/turtle-0.0.1-py3-none-any.whl')`);
+print("loading turtle")
+await micropip.install('./vendor/turtle-0.0.1-py3-none-any.whl')
+import turtle
+import turtleSender
+turtle._CFG['canvwidth'] = ${graphicsWidth}
+turtle._CFG['canvheight'] = ${graphicsHeight}`);
 	    }
 	    
 	    pyodide.globals.set("__code_to_evaluate__", event.data.python);
 	    let hasRun
-	    if (event.data.source === "terminal") { // TODO: check multiline stuff
+	    if (event.data.source === "terminal") {
 		hasRun = await pyodide.runPythonAsync(
 		    `runner.feed_code(__code_to_evaluate__)`);
 	    } else if (event.data.source === "editor") {
-		hasTurtle = false;
+		//hasTurtle = false;
+		// this is not necessary since we're still in the same pyodide
+		//  instance so micropip is still loaded and our custom turtle wheel is registered
 		hasRun = await pyodide.runPythonAsync(`runner.exec_file(__code_to_evaluate__)`);
 	    }
 	    

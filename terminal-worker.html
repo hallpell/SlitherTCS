@@ -25,6 +25,9 @@
 
       worker.postMessage({ type: "init_buffer",
 			   interruptBuffer: interruptBuffer });
+      worker.postMessage({ type: "init_graphics",
+			   width: document.getElementById("graphics").clientWidth,
+			   height: document.getElementById("graphics").clientHeight });
       
       output.addText = (content) => {
 	  let wasFocused = ourInput.contains(document.activeElement);
@@ -95,7 +98,6 @@
       
       // code to jam turtle graphics into the graphics box
       const elementFromProps = (map) => {
-	  console.log("Map arg: ", map)
 	  const tag = map.get("tag");
 	  if (!tag) { return document.createTextNode(map.get("tag")); }
 	  
