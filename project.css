@@ -1,5 +1,6 @@
 body {
-    height: 95vh;
+    height: 100vh;
+    margin: 0px;
 }
 
 .rotate {
@@ -11,31 +12,65 @@ body {
     display: inline-block;
 }
 
+#header {
+    height: 40px;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+}
+
+button {
+    margin-left: 5px;
+}
+
 #mainContainer {
     display: flex;
     justify-content: space-around;
-    gap: 10px;
-    height: 100%;
-    border: 2px solid black;
+    gap: 0px;
+    height: calc(100% - 40px);
+}
+
+#terminal {
+    flex: 30;
+}
+
+#code {
+    flex: 30;
+    border-right: 2px solid #264649;
+}
+
+#graphicsContainer {
+    flex: 30;
+    border-left: 2px solid #eec037;
 }
 
 #codeBar, #terminalBar, #graphicsBar {
-    background-color: #888888;
     display: flex;
     justify-content: space-between;
+    padding-left: 4px;
+}
+
+#codeBar, #collapsedCode {
+    background-color: #264649;
+    color: white;
+}
+
+#terminalBar, #collapsedTerminal {
+    background-color: #a0e3dc;
+}
+
+#graphicsBar, #collapsedGraphics {
+    background-color: #eec037;
 }
 
 #collapsedCode, #collapsedTerminal, #collapsedGraphics {
     display: flex;
+    flex: 0.4;
     align-items: center;
     flex-direction: column;
     justify-content: center;
     width: 25px;
     cursor: pointer;
-}
-
-#codeLabel {
-    margin-left: 4px;
 }
 
 .minimize {
@@ -76,8 +111,8 @@ body {
 }
 
 .flexbox-item {
-    flex: 1;
-    /*    border: 2px solid red; */
+    /*flex: 1;
+    border: 2px solid red; */
     background-color: #eeeeee;
     height: 100%;
     width: 30%;
