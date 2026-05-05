@@ -1,19 +1,86 @@
 <!doctype html>
 <html>
   <head>
-    <link rel='stylesheet' href='terminal.css'>
+    <link rel='stylesheet' href='project.css'>
     <link rel='stylesheet' href='vendor/codemirror/codemirror.css'>
   </head>
   <body>
     <button id=runCode>Run</button>
+    <button id=stopCode>Stop</button>
     <div id=mainContainer>
-      <div id=editor class=flexbox-item></div>
-      <div id=outputBox class=flexbox-item>
-	<div id="output"><input id="repl-input" autocomplete="off"></input></div>
+      <div id=collapsedCode>
+	<span class="rotate">Code</span>
       </div>
-      <div id=graphics class=flexbox-item></div>
+      <div id=code class=flexbox-item>
+	<div id=codeBar>
+	  <span id=codeLabel>Code</span>
+	  <img id=codeMinimize src='./images/minimize.png' height=16 width=16 class='minimize'></img>
+	</div>
+	<div id=editor class=flexbox-item></div>
+      </div>
+
+      <div id=collapsedTerminal>
+	<span class="rotate">Terminal</span>
+      </div>
+      <div id=terminal class=flexbox-item>
+	<div id=terminalBar>
+	  <span id=terminalLabel>Terminal</span>
+	  <img id=terminalMinimize src='./images/minimize.png' height=16 width=16 class='minimize'></img>
+	</div>
+	<div id=output><input id="repl-input" autocomplete="off"></input></div>
+      </div>
+
+      <div id=collapsedGraphics>
+	<span class="rotate">Graphics</span>
+      </div>
+      <div id=graphicsContainer class=flexbox-item>
+	<div id=graphicsBar>
+	  <span id=graphicsLabel>Graphics</span>
+	  <img id=graphicsMinimize src='./images/minimize.png' height=16 width=16 class='minimize'></img>
+	</div>
+	<div id=graphics></div>
+      </div>
     </div>
 
+    <script type="text/javascript">
+      // code for initializing and adjusting the layout of the screen
+      function collapseEl(toCollapse, toExpand, newDisplayVal) {
+	  toCollapse.style.display = "none";
+	  toExpand.style.display = newDisplayVal;
+      }
+
+      let collapsedCode = document.getElementById("collapsedCode");
+      collapsedCode.style.display = 'none';
+      let code = document.getElementById("code");
+      collapsedCode.addEventListener("click", () => {
+	  collapseEl(collapsedCode, code, 'block');
+      })
+      document.getElementById("codeMinimize").addEventListener("click", () => {
+	  collapseEl(code, collapsedCode, 'flex');
+      })
+
+      let collapsedTerminal = document.getElementById("collapsedTerminal");
+      collapsedTerminal.style.display = 'none';
+      let terminal = document.getElementById("terminal");
+      collapsedTerminal.addEventListener("click", () => {
+	  collapseEl(collapsedTerminal, terminal, 'block');
+      })
+      document.getElementById("terminalMinimize").addEventListener("click", () => {
+	  collapseEl(terminal, collapsedTerminal, 'flex');
+      })
+
+      let collapsedGrapics = document.getElementById("collapsedGraphics");
+      let graphics = document.getElementById("graphicsContainer");
+      graphics.style.display = 'none';
+      collapsedGraphics.addEventListener("click", () => {
+	  collapseEl(collapsedGraphics, graphics, 'block');
+      })
+      document.getElementById("graphicsMinimize").addEventListener("click", () => {
+	  collapseEl(graphics, collapsedGraphics, 'flex');
+      })
+
+      
+    </script>
 
     <script type="text/javascript">
       // initializing our worker
@@ -40,7 +107,7 @@
 	  newDiv.append(newText);
 	  output.appendChild(newDiv);
 	  newDiv.appendChild(ourInput);
-	  document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
+	  document.getElementById("terminal").scrollTop = document.getElementById("terminal").scrollHeight;
 	  if (wasFocused) {
 	      ourInput.focus();
 	  }
@@ -81,7 +148,7 @@
 	  newDiv.appendChild(newSpan);
 	  newDiv.appendChild(ourInput);
 	  output.appendChild(newDiv);
-	  document.getElementById("outputBox").scrollTop = outputBox.scrollHeight;
+	  document.getElementById("terminal").scrollTop = document.getElementById("terminal").scrollHeight;
 	  if (wasFocused) {
 	      ourInput.focus();
 	  }

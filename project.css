@@ -1,0 +1,92 @@
+body {
+    height: 95vh;
+}
+
+.rotate {
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    transform: rotate(90deg);
+    display: inline-block;
+}
+
+#mainContainer {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+    height: 100%;
+    border: 2px solid black;
+}
+
+#codeBar, #terminalBar, #graphicsBar {
+    background-color: #888888;
+    display: flex;
+    justify-content: space-between;
+}
+
+#collapsedCode, #collapsedTerminal, #collapsedGraphics {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    width: 25px;
+    cursor: pointer;
+}
+
+#codeLabel {
+    margin-left: 4px;
+}
+
+.minimize {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    margin-right: 4px;
+}
+
+#editor {
+    width: 100%;
+    height: calc(100% - 20px);
+}
+
+#terminal {
+    overflow-y: auto;
+}
+
+#output {
+    white-space: pre-wrap;
+    font-family: monospace;
+    padding: 10px;
+}
+
+.line {
+    display: flex;
+    align-items: center;
+}
+
+#repl-input {
+    flex: 1;
+    min-width: 0;
+    font-family: monospace;
+    background: #ddd;
+    border: none;
+    outline: none;
+    padding: 0px;
+}
+
+.flexbox-item {
+    flex: 1;
+    /*    border: 2px solid red; */
+    background-color: #eeeeee;
+    height: 100%;
+    width: 30%;
+}
+
+.userInput {
+    color: blue;
+}
+
+.outputError {
+    color: red;
+}
