@@ -17,6 +17,8 @@ body {
     display: flex;
     flex-flow: row nowrap;
     align-items: center;
+    background-color: #5F48B5;
+    /*background-color: #639593; midpoint of TCS blues*/
 }
 
 button {
@@ -47,7 +49,9 @@ button {
 #codeBar, #terminalBar, #graphicsBar {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding-left: 4px;
+    font-family: arial;
 }
 
 #codeBar, #collapsedCode {
@@ -57,6 +61,7 @@ button {
 
 #terminalBar, #collapsedTerminal {
     background-color: #a0e3dc;
+    color: black;
 }
 
 #graphicsBar, #collapsedGraphics {
@@ -71,6 +76,11 @@ button {
     justify-content: center;
     width: 25px;
     cursor: pointer;
+    font-family: arial;
+}
+
+#codeLabel, #terminalLabel {
+    margin-right: 8px;
 }
 
 .minimize {
@@ -89,6 +99,16 @@ button {
     overflow-y: auto;
 }
 
+.terminal-light-theme {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.terminal-dark-theme {
+    background-color: #000000;
+    color: #00ff00;
+}
+
 #output {
     white-space: pre-wrap;
     font-family: monospace;
@@ -104,16 +124,14 @@ button {
     flex: 1;
     min-width: 0;
     font-family: monospace;
-    background: #ddd;
+    background: #0000ff33;
+    color: inherit;
     border: none;
     outline: none;
     padding: 0px;
 }
 
 .flexbox-item {
-    /*flex: 1;
-    border: 2px solid red; */
-    background-color: #eeeeee;
     height: 100%;
     width: 30%;
 }

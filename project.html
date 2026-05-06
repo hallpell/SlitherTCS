@@ -3,6 +3,11 @@
   <head>
     <link rel='stylesheet' href='project.css'>
     <link rel='stylesheet' href='vendor/codemirror/codemirror.css'>
+    <link rel='stylesheet' href='vendor/codemirror/eclipse.css'>
+    <link rel='stylesheet' href='vendor/codemirror/elegant.css'>
+    <link rel='stylesheet' href='vendor/codemirror/ambiance.css'>
+    <link rel='stylesheet' href='vendor/codemirror/blackboard.css'>
+    <link rel='stylesheet' href='vendor/codemirror/cobalt.css'>
   </head>
   <body>
     <div id=header>
@@ -15,7 +20,16 @@
       </div>
       <div id=code class=flexbox-item>
 	<div id=codeBar>
-	  <span id=codeLabel>Code</span>
+	  <div>
+	    <span id=codeLabel>Code</span>
+	    <select id=cmTheme>
+	      <option value='eclipse'>eclipse</option>
+	      <option value='elegant'>elegant</option>
+	      <option value='ambiance'>ambiance</option>
+	      <option value='blackboard'>blackboard</option>
+	      <option value='cobalt'>cobalt</option>
+	    </select>
+	  </div>
 	  <img id=codeMinimize src='./images/minimize.png' height=16 width=16 class='minimize'></img>
 	</div>
 	<div id=editor class=flexbox-item></div>
@@ -24,9 +38,15 @@
       <div id=collapsedTerminal>
 	<span class="rotate">Terminal</span>
       </div>
-      <div id=terminal class=flexbox-item>
+      <div id=terminal class="flexbox-item terminal-light-theme">
 	<div id=terminalBar>
-	  <span id=terminalLabel>Terminal</span>
+	  <div>
+	    <span id=terminalLabel>Terminal</span>
+	    <select id=terminalTheme>
+	      <option value='light'>light</option>
+	      <option value='dark'>dark</option>
+	    </select>
+	  </div>
 	  <img id=terminalMinimize src='./images/minimize.png' height=16 width=16 class='minimize'></img>
 	</div>
 	<div id=output><input id="repl-input" autocomplete="off"></input></div>
@@ -80,8 +100,6 @@
       document.getElementById("graphicsMinimize").addEventListener("click", () => {
 	  collapseEl(graphics, collapsedGraphics, 'flex');
       })
-
-      
     </script>
 
     <script type="text/javascript">
@@ -92,12 +110,25 @@
       let ourInput = document.getElementById("repl-input");
       const interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
 
+      const terminalThemeOption = document.getElementById("terminalTheme");
+      const terminalEl = document.getElementById("terminal");
+      terminalThemeOption.addEventListener('change', () => {
+	  console.log("Stuff");
+	  if (terminalThemeOption.value == 'light') {
+	      terminalEl.classList.add("terminal-light-theme");
+	      terminalEl.classList.remove("terminal-dark-theme");
+	  } else if (terminalThemeOption.value == 'dark') {
+	      terminalEl.classList.add("terminal-dark-theme");
+	      terminalEl.classList.remove("terminal-light-theme");
+	  }
+      })
+
       worker.postMessage({ type: "init_buffer",
 			   interruptBuffer: interruptBuffer });
       worker.postMessage({ type: "init_graphics",
 			   width: document.getElementById("graphics").clientWidth,
 			   height: document.getElementById("graphics").clientHeight });
-      
+
       output.addText = (content) => {
 	  let wasFocused = ourInput.contains(document.activeElement);
 	  let newDiv = document.createElement("div");
@@ -384,7 +415,13 @@
 	      tabSize: 2,
 	      indentWithTabs: false,
 	      lineWrapping: false,
+	      theme: "eclipse"
 	  });
+
+      const cmThemeOption = document.getElementById("cmTheme");
+      cmThemeOption.addEventListener('change', () => {
+	  editor.setOption("theme", cmThemeOption.value);
+      })
     </script>
 	      
   </body>
