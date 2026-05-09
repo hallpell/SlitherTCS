@@ -64,132 +64,36 @@
       </div>
     </div>
 
-    <script type="text/javascript">
-      // code for initializing and adjusting the layout of the screen
-      function collapseEl(toCollapse, toExpand, newDisplayVal) {
-	  toCollapse.style.display = "none";
-	  toExpand.style.display = newDisplayVal;
-      }
 
-      let collapsedCode = document.getElementById("collapsedCode");
-      collapsedCode.style.display = 'none';
-      let code = document.getElementById("code");
-      collapsedCode.addEventListener("click", () => {
-	  collapseEl(collapsedCode, code, 'block');
-      })
-      document.getElementById("codeMinimize").addEventListener("click", () => {
-	  collapseEl(code, collapsedCode, 'flex');
-      })
+    <script src='vendor/codemirror/codemirror.js'></script>
+    <script src='vendor/codemirror/mode/python/python.js'></script>
 
-      let collapsedTerminal = document.getElementById("collapsedTerminal");
-      collapsedTerminal.style.display = 'none';
-      let terminal = document.getElementById("terminal");
-      collapsedTerminal.addEventListener("click", () => {
-	  collapseEl(collapsedTerminal, terminal, 'block');
-      })
-      document.getElementById("terminalMinimize").addEventListener("click", () => {
-	  collapseEl(terminal, collapsedTerminal, 'flex');
-      })
-
-      let collapsedGrapics = document.getElementById("collapsedGraphics");
-      let graphics = document.getElementById("graphicsContainer");
-      graphics.style.display = 'none';
-      collapsedGraphics.addEventListener("click", () => {
-	  collapseEl(collapsedGraphics, graphics, 'block');
-      })
-      document.getElementById("graphicsMinimize").addEventListener("click", () => {
-	  collapseEl(graphics, collapsedGraphics, 'flex');
-      })
-    </script>
-
-    <script type="text/javascript">
+    <script type="module">
       // initializing our worker
-      const worker = new Worker("worker.js");
-      const output = document.getElementById("output");
+      import worker from "./src/js/workerClient.js";
       let terminalStatus = 'ready';
-      let ourInput = document.getElementById("repl-input");
       const interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
 
-      const terminalThemeOption = document.getElementById("terminalTheme");
-      const terminalEl = document.getElementById("terminal");
-      terminalThemeOption.addEventListener('change', () => {
-	  console.log("Stuff");
-	  if (terminalThemeOption.value == 'light') {
-	      terminalEl.classList.add("terminal-light-theme");
-	      terminalEl.classList.remove("terminal-dark-theme");
-	  } else if (terminalThemeOption.value == 'dark') {
-	      terminalEl.classList.add("terminal-dark-theme");
-	      terminalEl.classList.remove("terminal-light-theme");
-	  }
-      })
+      import { initEditor, getEditor } from "./src/js/codeMirrorInit.js";
+      import { initThemeUpdates } from "./src/js/themeUpdates.js";
+      import { initCollapsingUI } from "./src/js/collapsingUI.js";
+      import { initTerminalDOM } from "./src/js/terminalDOM.js";
+      
+      initEditor();
+      initThemeUpdates();
+      initCollapsingUI();
+      initTerminalDOM();
 
+      const output = document.getElementById("output");
+      const ourInput = document.getElementById("repl-input");
+      
       worker.postMessage({ type: "init_buffer",
 			   interruptBuffer: interruptBuffer });
-      worker.postMessage({ type: "init_graphics",
-			   width: document.getElementById("graphics").clientWidth,
-			   height: document.getElementById("graphics").clientHeight });
-
-      output.addText = (content) => {
-	  let wasFocused = ourInput.contains(document.activeElement);
-	  let newDiv = document.createElement("div");
-	  newDiv.className = 'line';
-
-	  let newText = document.createElement("span");
-	  newText.textContent = content;
-
-	  newDiv.append(newText);
-	  output.appendChild(newDiv);
-	  newDiv.appendChild(ourInput);
-	  document.getElementById("terminal").scrollTop = document.getElementById("terminal").scrollHeight;
-	  if (wasFocused) {
-	      ourInput.focus();
-	  }
-      }
-
-      output.appendText = (content) => {
-	  let wasFocused = ourInput.contains(document.activeElement);
-	  let newText = document.createElement("span");
-	  newText.textContent = content;
-
-	  output.lastElementChild.insertBefore(newText, ourInput);
-	  if (wasFocused) {
-	      ourInput.focus();
-	  }
-      }
-
-      // this just makes the appended text of class 'userInput' to allow recoloring (compared to appendText)
-      output.appendInput = (content) => {
-	  let wasFocused = ourInput.contains(document.activeElement);
-	  let newText = document.createElement("span");
-	  newText.className = 'userInput';
-	  newText.textContent = content;
-
-	  output.lastElementChild.insertBefore(newText, ourInput);
-	  if (wasFocused) {
-	      ourInput.focus();
-	  }
-      }
-      
-      output.addError = (content) => {
-	  let wasFocused = ourInput.contains(document.activeElement);
-	  let newDiv = document.createElement("div");
-	  newDiv.className = 'line';
-	  let newSpan = document.createElement("span");
-	  newSpan.className = 'outputError';
-	  newSpan.textContent = content;
-
-	  newDiv.appendChild(newSpan);
-	  newDiv.appendChild(ourInput);
-	  output.appendChild(newDiv);
-	  document.getElementById("terminal").scrollTop = document.getElementById("terminal").scrollHeight;
-	  if (wasFocused) {
-	      ourInput.focus();
-	  }
-      }
-      
-      output.printPrompt = () => {
-	  output.addText(">>> ");
-      }
+      // this whole computation (as opposed to just clientWidth/clientHeight) is necessary
+      //   because clientWidth will round up, which adds scrollbars and breaks the layout
+      worker.postMessage({ type: "graphics_dims",
+	width: Math.floor(document.getElementById("graphics").getBoundingClientRect().width), 
+	height: Math.floor(document.getElementById("graphics").getBoundingClientRect().height) });
 
       function sendInterrupt() {
 	  Atomics.store(interruptBuffer, 0, 2); // 2 = SIGINT-like signal
@@ -260,7 +164,10 @@
 	      
 	  case "turtle_graphics":
 	      console.log("Turtle graphics detected");
-	      graphics.innerHTML = elementFromProps(new Map(Object.entries(message))).outerHTML;
+	      const turtleGraphicEl = elementFromProps(new Map(Object.entries(message)));
+	      // this prevents it from using extra vertical space, which breaks the layout
+	      turtleGraphicEl.style.display = 'block';
+	      document.getElementById("graphics").innerHTML = turtleGraphicEl.outerHTML;
 	      break;
 	      
 	  case "stdin_request":
@@ -375,7 +282,7 @@
 	  // this is for running the code in the editor
 	  async function gatherAndRunEditorCode() {
 	      output.addError("Running file, refreshing environment");
-	      let code = editor.getValue();
+	      let code = getEditor().getValue();
 	      await runEditorCode(code);
 	  }
 
@@ -403,26 +310,5 @@
       
       observer.observe(document.body, { childList: true })
     </script>
-    <script src='vendor/codemirror/codemirror.js'></script>
-    <script src='vendor/codemirror/mode/python/python.js'></script>
-    <script>
-      const editor = CodeMirror(
-	  document.getElementById("editor"),
-	  {
-	      mode: 'python',
-	      lineNumbers: true,
-	      indentUnit: 2,
-	      tabSize: 2,
-	      indentWithTabs: false,
-	      lineWrapping: false,
-	      theme: "eclipse"
-	  });
-
-      const cmThemeOption = document.getElementById("cmTheme");
-      cmThemeOption.addEventListener('change', () => {
-	  editor.setOption("theme", cmThemeOption.value);
-      })
-    </script>
-	      
   </body>
 </html>

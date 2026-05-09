@@ -1,6 +1,9 @@
 import turtle
 import turtleSender
 
+# this makes us use updated width/height from turtle._CFG
+turtle.Screen().reset()
+
 t = turtle.Turtle()
 t.forward(100)
 turtle.Screen().bgcolor("blue")

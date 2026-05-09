@@ -1,4 +1,5 @@
-importScripts("https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js");
+//importScripts("https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js");
+import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.mjs";
 
 let pyodide;
 let interruptBuffer;
@@ -35,7 +36,7 @@ async function init() {
 
     // refactor these imports into a wheel once stable
     console.log("Hacky python import"); 
-    const response = await fetch("runner.py");
+    const response = await fetch("../python/runner.py");
     const code = await response.text();
 
     pyodide.FS.writeFile("runner.py", code);
@@ -88,9 +89,10 @@ self.onmessage = async (event) => {
 	console.log("Interrupt Buffer Connected");
     }
 
-    if (event.data.type == "init_graphics") {
+    if (event.data.type == "graphics_dims") {
 	graphicsWidth = event.data.width;
 	graphicsHeight = event.data.height;
+	console.log("Graphics Dimensions:", graphicsWidth, graphicsHeight);
     }
     
     if (event.data.type == "refresh") {
@@ -119,10 +121,14 @@ self.onmessage = async (event) => {
 		await pyodide.runPythonAsync(`
 import micropip
 print("loading turtle")
-await micropip.install('./vendor/turtle-0.0.1-py3-none-any.whl')
+await micropip.install('../../vendor/turtle-0.0.1-py3-none-any.whl')
 import turtle
 import turtleSender
 turtle._CFG['canvwidth'] = ${graphicsWidth}
+turtle._CFG['canvheight'] = ${graphicsHeight}`);
+	    } else if (event.data.python.includes("turtle")) {
+		// just update the dimensions
+		await pyodide.runPythonAsync(`turtle._CFG['canvwidth'] = ${graphicsWidth}
 turtle._CFG['canvheight'] = ${graphicsHeight}`);
 	    }
 	    
