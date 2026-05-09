@@ -43,4 +43,6 @@ export function initTerminalDOM() {
     output.printPrompt = () => {
 	output.addText(">>> ");
     }
+
+    output.printPrompt();
 }
