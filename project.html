@@ -10,10 +10,46 @@
     <link rel='stylesheet' href='vendor/codemirror/cobalt.css'>
   </head>
   <body>
+    <div id='dialogBackgrounds'></div>
+    
     <div id=header>
-      <button id=runCode>Run</button>
-      <button id=stopCode>Stop</button>
+      <div id=accountState>
+	<button id=login popovertarget='login-dialog'>Login</button>
+	<button id=createAccount popovertarget='signup-dialog'>Sign Up</button>
+	<button id=accountProfile>Profile</button>
+	<button id=signOut>Sign Out</button>
+      </div>
+      <div id=codeState>
+	<button id=runCode>Run</button>
+	<button id=stopCode>Stop</button>
+      </div>
+      <div id=saveState>
+	<button id=save>Save</button>
+      </div>
     </div>
+
+    <dialog popover id='login-dialog'>
+      <form id='login-form'>
+	<input type='email' name='email' placeholder='Email' required>
+	<input type='password' name='password' placeholder='Password' required>
+	<div id=dialogButtonDiv>
+	  <button type='submit'>Login</button>
+	  <button type='button' popovertarget='login-dialog'>Cancel</button>
+	</div>
+      </form>
+    </dialog>
+
+    <dialog popover id='signup-dialog'>
+      <form id='signup-form'>
+	<input type='email' name='email' placeholder='Email' required>
+	<input type='password' name='password' placeholder='Password' required>
+	<div id=dialogButtonDiv>
+	  <button type='submit'>Signup</button>
+	  <button type='button' popovertarget='signup-dialog'>Cancel</button>
+	</div>
+      </form>
+    </dialog>
+        
     <div id=mainContainer>
       <div id=collapsedCode>
 	<span class="rotate">Code</span>
@@ -68,6 +104,7 @@
     <script src='vendor/codemirror/codemirror.js'></script>
     <script src='vendor/codemirror/mode/python/python.js'></script>
 
+    <!-- this import of main calls the rest of the JS for this page -->
     <script type="module" src="./src/js/main.js">
 
 

@@ -1,12 +1,36 @@
 body {
     height: 100vh;
     margin: 0px;
-/*    scrollbar-width: none;*/
 }
-/*
-::-webkit-scrollbar {
-    display: none;
-}*/
+
+dialog {
+    width: 40%;
+    height: 40%;
+
+    
+}
+
+#dialogBackgrounds {
+    z-index: 10; /* must be higher than codemirror's z-indexes of 6 */
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+
+    opacity: 0;
+    background: rgba(0, 0, 0, 0);
+ 
+
+    transition:
+	opacity 300ms ease,
+	background 300ms ease;
+}
+
+#dialogBackgrounds.open {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.4);
+}
 
 .rotate {
     -webkit-transform: rotate(90deg);
@@ -21,12 +45,15 @@ body {
     height: 40px;
     display: flex;
     flex-flow: row nowrap;
+    justify-content: space-between;
     align-items: center;
     background-color: #5F48B5;
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
 button {
-    margin-left: 5px;
+    margin: 2px;
 }
 
 #mainContainer {
