@@ -9,6 +9,7 @@ import { initWorkerDOM } from "./workerDOM.js";
 import { initTerminalUI } from "./terminalUI.js";
 import { gatherAndRunEditorCode } from "./runner.js";
 import { initAccountUI } from "./accountUI.js";
+import { initSaveUI } from "./saving.js";
 
 initEditor();
 initThemeUpdates();
@@ -18,6 +19,7 @@ initMatPlotLibAttacher(); // TODO: FIX
 initWorkerDOM();
 initTerminalUI();
 initAccountUI();
+initSaveUI();
 
 document.getElementById("runCode").addEventListener("click", gatherAndRunEditorCode);
 
