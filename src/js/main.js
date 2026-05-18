@@ -1,5 +1,6 @@
 // initializing our worker
 import { worker } from "./workerClient.js";
+import "./firebase.js";
 import { initEditor, getEditor } from "./codeMirrorInit.js";
 import { initThemeUpdates } from "./themeUpdates.js";
 import { initCollapsingUI } from "./collapsingUI.js";
