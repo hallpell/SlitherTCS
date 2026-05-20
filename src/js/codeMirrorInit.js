@@ -17,3 +17,7 @@ export function initEditor() {
 export function getEditor() {
     return editor;
 }
+
+export function setEditor(val) {
+    editor.setValue(val);
+}

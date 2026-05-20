@@ -16,8 +16,17 @@
       <div id=accountState>
 	<button id=login popovertarget='login-dialog'>Login</button>
 	<button id=createAccount popovertarget='signup-dialog'>Sign Up</button>
-	<button id=accountProfile>Profile</button>
-	<button id=signOut>Sign Out</button>
+	<button popovertarget='profileDropdown' id=accountProfile style='anchor-name: --profile_button'>Profile</button>
+	<div popover id='profileDropdown'>
+	  <ul id='profileList'>
+	    <li>
+	      <span id='newProject'>New Project</span>
+	    </li>
+	    <li id=signOutLI>
+	      <span id=signOut>Sign Out</span>
+	    </li>
+	  </ul>
+	</div>
       </div>
       <div id=codeState>
 	<button id=runCode>Run</button>

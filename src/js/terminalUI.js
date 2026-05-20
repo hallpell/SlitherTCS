@@ -4,6 +4,10 @@ export async function initTerminalUI() {
     const main = await import("./main.js");
     const workerModule =  await import("./workerClient.js");
     const runnerModule =  await import("./runner.js");
+
+    document.getElementById("terminal").addEventListener("click", (e) => {
+	ourInput.focus();
+    })
     
     let history = [];
     let historyIndex = -1;

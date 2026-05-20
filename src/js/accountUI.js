@@ -2,8 +2,62 @@ import { login, signup, logout } from "./auth.js";
 import { toggleDBGopen } from "./modalBackground.js";
 import { db, auth } from "./firebase.js";
 import { logoutUI, setAccountUI } from "./accountStateUI.js";
-import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+import { setEditor } from "./codeMirrorInit.js";
+import { doc, collection, setDoc, getDoc, getDocs } from
+"https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+
+function buildTemporallySortedProjects(colSnap) {
+    let tsps = [];
+    colSnap.forEach((d) => {
+	const data = d.data();
+	let val = {
+	    time: data.updatedAt,
+	    name: data.name,
+	    id: d.id
+	}
+	
+	// insertion sort
+	let i = 0;
+	while (i < tsps.length && tsps[i].time < val.time) {
+	    i++;
+	}
+	tsps.splice(i, 0, val);
+    })
+    return tsps;
+}
+
+function insertProjects(projs) {
+    const frag = document.createDocumentFragment();
+    
+    projs.forEach((p) => {
+	const li = document.createElement('li');
+	const span = document.createElement('span');
+	span.textContent = p.name;
+
+	li.classList.add('userProject');
+
+	frag.appendChild(li);
+	li.appendChild(span);
+	li.addEventListener("click", () => {
+	    getDoc(doc(db, 'users', auth.currentUser.uid, 'projects', p.id)).then((snap) => {
+		if (snap.exists() && "code" in snap.data()) {
+		    setEditor(snap.data().code);
+		    // TODO: set URL
+		    document.getElementById("profileDropdown").hidePopover();
+		} else {
+		    console.error("Couldn't find project " + p.id);
+		}
+	    }).catch((error) => {
+		console.log("Error loading project with id: ", p.id);
+		console.error(error);
+	    })
+	})
+    })
+
+    const profileList = document.getElementById("profileList");
+    profileList.insertBefore(frag, document.getElementById("signOutLI"));
+}
 
 export function initAccountUI() {
     const loginDialog = document.getElementById("login-dialog");
@@ -12,7 +66,9 @@ export function initAccountUI() {
     signupDialog.addEventListener("toggle", toggleDBGopen);
 
     onAuthStateChanged(auth, (user) => {
+	// if user is signing in
 	if (user) {
+	    // check if they have saved theme settings
 	    getDoc(doc(db, 'users', user.uid)).then((snap) => {
 		if (snap.exists()) {
 		    const data = snap.data();
@@ -31,8 +87,6 @@ export function initAccountUI() {
 			terminalThemeOption.value = data.terminalTheme;
 			terminalThemeOption.dispatchEvent(new Event("change"));
 		    }
-		    
-		    
 		} else {
 		    console.log("No display name stored for " + user.uid);
 		    setAccountUI("Profile");
@@ -42,8 +96,20 @@ export function initAccountUI() {
 		console.error(error);
 		setAccountUI("Profile");
 	    })
+
+	    // add all user projects to dropdown menu allowing them to load projects
+	    getDocs(collection(db, 'users', user.uid, 'projects')).then((colSnapshot) => {
+		let tsps = buildTemporallySortedProjects(colSnapshot);
+		insertProjects(tsps);
+	    }).catch((error) => {
+		console.log("Couldn't read projects to make loading bar");
+		console.error(error);
+	    })
 	} else {
 	    logoutUI();
+	    document.querySelectorAll(".userProject").forEach((el) => {
+		el.remove();
+	    })
 	}
     })
 
@@ -169,7 +235,7 @@ export function initAccountUI() {
     const signOut = document.getElementById("signOut")
     signOut.addEventListener("click", () => {
 	logout().then(() => {
-	    console.log("Successfully logged out");
+	    document.getElementById("profileDropdown").hidePopover();
 
 	    logoutUI();
 	}).catch((error) => {

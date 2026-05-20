@@ -6,8 +6,6 @@ body {
 dialog {
     width: 40%;
     height: 40%;
-
-    
 }
 
 #dialogBackgrounds {
@@ -30,6 +28,38 @@ dialog {
 #dialogBackgrounds.open {
     opacity: 1;
     background: rgba(0, 0, 0, 0.4);
+}
+
+#profileDropdown {
+    /* fallback if browser doesn't support position anchor */
+    position: absolute;
+    top: 35px;
+    left: 10px;
+
+    /* if browser does support position anchor, these apply */
+    position-anchor: --profile_button;
+    top: anchor(--profile_button bottom);
+    left: anchor(--profile_button left);
+
+    margin: 0;
+    padding: 0;
+    padding-left: 6px;
+}
+
+#profileDropdown>ul {
+    padding: 5px 0;
+    list-style: none;
+    min-width: 160px;
+    margin: 0;
+}
+
+#profileDropdown>ul>li {
+    padding-top: 2px;
+}
+
+#profileDropdown>ul>li:hover {
+    cursor: pointer;
+    background-color: #ccc;
 }
 
 .rotate {
