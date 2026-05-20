@@ -1,11 +1,13 @@
-// initializing our worker
-import { worker } from "./workerClient.js";
+// this initializes firebase and got grumpy when I tried to make it 
+//   export an init function, so is just stuck like this at the top
 import "./firebase.js";
+
+import { worker } from "./workerClient.js";
 import { initEditor, getEditor } from "./codeMirrorInit.js";
 import { initThemeUpdates } from "./themeUpdates.js";
 import { initCollapsingUI } from "./collapsingUI.js";
 import { initTerminalDOM } from "./terminalDOM.js";
-import { initMatPlotLibAttacher } from "./matPlotLibAttacher.js"; // TODO: FIX
+import { initMatPlotLibAttacher } from "./matPlotLibAttacher.js"; // TODO: FIX (broken from webWorker)
 import { initWorkerDOM } from "./workerDOM.js";
 import { initTerminalUI } from "./terminalUI.js";
 import { gatherAndRunEditorCode } from "./runner.js";
@@ -16,7 +18,7 @@ initEditor();
 initThemeUpdates();
 initCollapsingUI();
 initTerminalDOM();
-initMatPlotLibAttacher(); // TODO: FIX
+initMatPlotLibAttacher(); // TODO: FIX (broken from webWorker)
 initWorkerDOM();
 initTerminalUI();
 initAccountUI();

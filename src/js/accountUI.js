@@ -1,13 +1,51 @@
 import { login, signup, logout } from "./auth.js";
 import { toggleDBGopen } from "./modalBackground.js";
 import { db, auth } from "./firebase.js";
+import { logoutUI, setAccountUI } from "./accountStateUI.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
 export function initAccountUI() {
     const loginDialog = document.getElementById("login-dialog");
     const signupDialog = document.getElementById("signup-dialog");
     loginDialog.addEventListener("toggle", toggleDBGopen);
     signupDialog.addEventListener("toggle", toggleDBGopen);
+
+    onAuthStateChanged(auth, (user) => {
+	if (user) {
+	    getDoc(doc(db, 'users', user.uid)).then((snap) => {
+		if (snap.exists()) {
+		    const data = snap.data();
+		    if ("displayName" in data) {
+			setAccountUI(data.displayName);
+		    } else { setAccountUI("Profile"); }
+
+		    if ("cmTheme" in data) {
+			const cmThemeOption = document.getElementById("cmTheme");
+			cmThemeOption.value = data.cmTheme;
+			cmThemeOption.dispatchEvent(new Event("change"));
+		    }
+
+		    if ("terminalTheme" in data) {
+			const terminalThemeOption = document.getElementById("terminalTheme");
+			terminalThemeOption.value = data.terminalTheme;
+			terminalThemeOption.dispatchEvent(new Event("change"));
+		    }
+		    
+		    
+		} else {
+		    console.log("No display name stored for " + user.uid);
+		    setAccountUI("Profile");
+		}
+	    }).catch((error) => {
+		console.log("Couldn't retrieve user profile for " + user.uid);
+		console.error(error);
+		setAccountUI("Profile");
+	    })
+	} else {
+	    logoutUI();
+	}
+    })
 
     // returns false if no issues, otherwise returns a string with a reason
     function isUsernameInvalid(username) {
@@ -43,23 +81,30 @@ export function initAccountUI() {
 	const identifier = formData.get("identifier");
 	const password = formData.get("password");
 	let email;
+	let username;
 	
 	if (!identifier.includes("@")) {
-	    // try to resolve to email
+	    username = identifier;
+
+	    const snap = await getDoc(doc(db, "usernames", identifier));
+	    if (snap.exists()) {
+		email = snap.data().email;
+	    }
+	    
 	} else {
 	    email = identifier;
 	}
 
 	login(email, password).then(() => {
 	    console.log("Logged in successfully");
-	    // TODO: Update UI to logged in state
+	    // onAuthStateChanged will handle some of the UI (profile buttons, etc)
 
 	    loginForm.reset();
-	    
 	    loginDialog.hidePopover();
 	}).catch((error) => {
 	    // TODO: Handle errors + display reasonably
-	    console.error("Error logging in:", error.code, error.message);
+	    console.error("Error logging in:");
+	    console.error(error);
 	})
     });
 
@@ -80,15 +125,15 @@ export function initAccountUI() {
 	    return;
 	}
 
-	// TODO: Check username uniqueness
 	const myDoc = await getDoc(doc(db, "usernames", username));
 	if (myDoc.exists()) {
+	    // TODO: Prettier errors
 	    alert("Username not available");
 	    return
 	}
 	
 	if (password.length < 6) {
-	    // TODO: error: password must be at least 6 characters long
+	    // TODO: prettier errors
 	    alert("Password must be at least characters");
 	    return;
 	}
@@ -96,15 +141,24 @@ export function initAccountUI() {
 	console.log("Creating account with", email, password);
 
 	signup(email, password).then((userCred) => {
-	    // TODO: Update UI to signed in state
+	    // onAuthStateChanged handles some UI
 
-	    setDoc(doc(db, "usernames", username), { uid: userCred.user.uid }).catch((error) => {
+	    setDoc(doc(db, "usernames", username), {
+		uid: userCred.user.uid,
+		email: email
+	    }).catch((error) => {
 		console.log(error);
 		alert("Couldn't write username (but account exists)");
 	    });
-	    // TODO: Write UN->UID doc for (a) checking UN uniqueness (b) prettier URL resolution
-	    signupForm.reset();
 
+	    setDoc(doc(db, "users", userCred.user.uid), {
+		displayName: username,
+		createdAt: Date.now()
+	    }).catch((error) => {
+		console.log("Couldn't create user profile in firebase");
+	    })
+	    
+	    signupForm.reset();
 	    signupDialog.hidePopover();
 	}).catch((error) => {
 	    // TODO: handle errors
@@ -116,9 +170,10 @@ export function initAccountUI() {
     signOut.addEventListener("click", () => {
 	logout().then(() => {
 	    console.log("Successfully logged out");
-	    // TODO: Update UI to logged out state
+
+	    logoutUI();
 	}).catch((error) => {
-	    // TODO: handle errors?
+	    // TODO: handle errors
 	    console.error("Error logging out", error.code, error.message);
 	})
     })
