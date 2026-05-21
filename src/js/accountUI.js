@@ -3,9 +3,12 @@ import { toggleDBGopen } from "./modalBackground.js";
 import { db, auth } from "./firebase.js";
 import { logoutUI, setAccountUI } from "./accountStateUI.js";
 import { setEditor } from "./codeMirrorInit.js";
+import { loadFromUIDs } from "./loading.js";
+import { isInvalidDocumentName } from "./firebaseHelpers.js";
+import { setProjectName, setProjectId, setOwns } from "./currentProject.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 import { doc, collection, setDoc, getDoc, getDocs } from
 "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
 function buildTemporallySortedProjects(colSnap) {
     let tsps = [];
@@ -40,18 +43,7 @@ function insertProjects(projs) {
 	frag.appendChild(li);
 	li.appendChild(span);
 	li.addEventListener("click", () => {
-	    getDoc(doc(db, 'users', auth.currentUser.uid, 'projects', p.id)).then((snap) => {
-		if (snap.exists() && "code" in snap.data()) {
-		    setEditor(snap.data().code);
-		    // TODO: set URL
-		    document.getElementById("profileDropdown").hidePopover();
-		} else {
-		    console.error("Couldn't find project " + p.id);
-		}
-	    }).catch((error) => {
-		console.log("Error loading project with id: ", p.id);
-		console.error(error);
-	    })
+	    loadFromUIDs(auth.currentUser.uid, p.id);
 	})
     })
 
@@ -65,6 +57,16 @@ export function initAccountUI() {
     loginDialog.addEventListener("toggle", toggleDBGopen);
     signupDialog.addEventListener("toggle", toggleDBGopen);
 
+    document.getElementById("newProject").addEventListener("click", () => {
+	// TODO: Complain if project is dirty
+	setEditor("");
+	setProjectName(null);
+	setProjectId(null);
+	setOwns(false);
+
+	document.getElementById("profileDropdown").hidePopover();
+    })
+    
     onAuthStateChanged(auth, (user) => {
 	// if user is signing in
 	if (user) {
@@ -133,6 +135,11 @@ export function initAccountUI() {
 	if (reserved.has(username.toLowerCase())) {
 	    return "Username is reserved";
 	}
+
+	let v = isInvalidDocumentName(username);
+	if (v) {
+	    return "Username invalid: " + v;
+	}
 	
 	return false;
     }
@@ -152,7 +159,7 @@ export function initAccountUI() {
 	if (!identifier.includes("@")) {
 	    username = identifier;
 
-	    const snap = await getDoc(doc(db, "usernames", identifier));
+	    const snap = await getDoc(doc(db, "usernames", identifier.toLowerCase()));
 	    if (snap.exists()) {
 		email = snap.data().email;
 	    }
@@ -163,6 +170,7 @@ export function initAccountUI() {
 
 	login(email, password).then(() => {
 	    console.log("Logged in successfully");
+
 	    // onAuthStateChanged will handle some of the UI (profile buttons, etc)
 
 	    loginForm.reset();
@@ -191,7 +199,7 @@ export function initAccountUI() {
 	    return;
 	}
 
-	const myDoc = await getDoc(doc(db, "usernames", username));
+	const myDoc = await getDoc(doc(db, "usernames", username.toLowerCase()));
 	if (myDoc.exists()) {
 	    // TODO: Prettier errors
 	    alert("Username not available");
@@ -209,7 +217,7 @@ export function initAccountUI() {
 	signup(email, password).then((userCred) => {
 	    // onAuthStateChanged handles some UI
 
-	    setDoc(doc(db, "usernames", username), {
+	    setDoc(doc(db, "usernames", username.toLowerCase()), {
 		uid: userCred.user.uid,
 		email: email
 	    }).catch((error) => {

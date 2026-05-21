@@ -19,11 +19,11 @@
 	<button popovertarget='profileDropdown' id=accountProfile style='anchor-name: --profile_button'>Profile</button>
 	<div popover id='profileDropdown'>
 	  <ul id='profileList'>
-	    <li>
-	      <span id='newProject'>New Project</span>
+	    <li id='newProject'>
+	      <span>New Project</span>
 	    </li>
-	    <li id=signOutLI>
-	      <span id=signOut>Sign Out</span>
+	    <li id='signOut'>
+	      <span>Sign Out</span>
 	    </li>
 	  </ul>
 	</div>
@@ -62,7 +62,7 @@
 
     <dialog popover id='project-naming-dialog'>
       <form id='project-naming-form'>
-	<input type='text' name='project_name' placeholder='Project Name' required>
+	<input id='project-name-input' type='text' name='project_name' placeholder='Project Name' required>
 	<div class='dialogButtonDiv'>
 	  <button type='submit'>Save</button>
 	  <button type='button' popovertarget='project-naming-dialog'>Cancel</button>
