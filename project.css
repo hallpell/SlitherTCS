@@ -5,7 +5,61 @@ body {
 
 dialog {
     width: 40%;
-    height: 40%;
+    padding: 0px;
+}
+
+h3 {
+    text-align: center;
+}
+
+#login-body, #signup-body {
+    margin: 4px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.form-group {
+    width: 90%;
+    margin-bottom: 15px;
+}
+
+.form-group>input {
+    /* 100%-10px is about 2*(3px of padding, 1.5 of border from default input)
+       the 10px should be adjusted if border gets adjusted */
+    width: calc(100% - 10px);
+    padding: 3px;
+    margin: 2px 0 0 0;
+}
+
+.form-button-group {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.form-button-group>button {
+    width: 30%;
+}
+
+.signup-validation {
+    font-family: arial;
+    font-size: 10px;
+    color: red;
+    display: inline-block; /* required for animation */
+}
+
+.error-shake {
+    animation: shake 0.35s ease-in-out;
+}
+
+@keyframes shake {
+    0%   { transform: translateX(0); }
+    15%, 45%, 75%  { transform: translateX(-4px); }
+    30%, 60%  { transform: translateX(4px); }
+    90%  { transform: translateX(-2px); }
+    100% { transform: translateX(0); }
 }
 
 #dialogBackgrounds {

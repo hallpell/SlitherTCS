@@ -1,3 +1,6 @@
+import { db } from "./firebase.js";
+import { addDoc, collection } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
 // implementing document ID constraints from https://firebase.google.com/docs/firestore/quotas
 // returns a string with a reason if invalid, false if no problems detected
 export function isInvalidDocumentName(docName) {
@@ -11,4 +14,12 @@ export function isInvalidDocumentName(docName) {
     if (docName.startsWith('__') && docName.endsWith('__')) return "Cannot start and end with '__'";
     
     return false;
+}
+
+export async function logErrors(context, message) {
+    addDoc(collection(db, "clientErrors"), {
+	time: serverTimestamp(),
+	context: context,
+	errorMessage: message
+    })
 }

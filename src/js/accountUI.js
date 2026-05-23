@@ -4,11 +4,116 @@ import { db, auth } from "./firebase.js";
 import { logoutUI, setAccountUI } from "./accountStateUI.js";
 import { setEditor } from "./codeMirrorInit.js";
 import { loadFromUIDs } from "./loading.js";
-import { isInvalidDocumentName } from "./firebaseHelpers.js";
+import { isInvalidDocumentName, logErrors } from "./firebaseHelpers.js";
+import { debouncedObjFactory } from "./jsUtils.js";
 import { setProjectName, setProjectId, setOwns } from "./currentProject.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-import { doc, collection, setDoc, getDoc, getDocs } from
+import { doc, collection, setDoc, getDoc, getDocs, serverTimestamp } from
 "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+let validSignup = { username: false, email: false, password: false };
+
+function errorShake(el) {
+    el.classList.remove("error-shake");
+
+    el.classList.add("error-shake");
+    setTimeout(() => { el.classList.remove("error-shake") }, 500);
+}
+
+// returns false if no issues, otherwise returns a string with a reason
+function isUsernameInvalid(username) {
+    const regex = /^(?=.{3,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$/;
+    
+    const reserved = new Set([
+	"admin",
+	"root",
+	"support",
+	"help",
+	"login",
+	"signup"
+    ]);
+    
+    if (!regex.test(username)) {
+	return "Invalid format";
+    }
+    
+    if (reserved.has(username.toLowerCase())) {
+	return "Username is reserved";
+    }
+    
+    let v = isInvalidDocumentName(username);
+    if (v) {
+	return "Username invalid: " + v;
+    }
+    
+    return false;
+}
+
+async function validateUsernameUI() {
+    const proposedUsername = document.getElementById('signup-form-username').value;
+    const valElement = document.getElementById("signup-form-username-validation");
+
+    if (proposedUsername === "") {
+	valElement.textContent = '';
+	validSignup.username = false;
+	return false;
+    }
+
+    const localInvalid = isUsernameInvalid(proposedUsername);
+    if (localInvalid) {
+	valElement.textContent = localInvalid;
+	validSignup.username = false;
+	return false;
+    }
+
+    const snap = await getDoc(doc(db, "usernames", proposedUsername));
+    if (snap.exists()) {
+	valElement.textContent = 'Username not available';
+	validSignup.username = false;
+	return false;
+    }
+
+    valElement.textContent = '';
+    validSignup.username = true;
+    return true;
+}
+
+function validateEmailUI() {
+    const emailEl = document.getElementById('signup-form-email');
+    const valElement = document.getElementById("signup-form-email-validation");
+
+    if (emailEl.validity.valid) {
+	valElement.textContent = '';
+	validSignup.email = true;
+	return true;
+    }
+
+    if (emailEl.validity.valueMissing) {
+	valElement.textContent = "";
+    } else if (emailEl.validity.typeMismatch) {
+	valElement.textContent = "Please enter a valid email address.";
+    } else {
+	valElement.textContent = email.validationMessage;
+    }
+    validSignup.email = false;
+    return false;
+}
+
+function validatePasswordUI() {
+    const proposedPassword = document.getElementById('signup-form-password').value;
+
+    const valElement = document.getElementById("signup-form-password-validation");
+    
+    if (proposedPassword.length < 6) {
+	valElement.textContent = 'Password must be at least 6 characters long';
+	validSignup.password = false;
+	return false;
+    } else {
+	valElement.textContent = '';
+	validSignup.password = true;
+	return true;
+    }
+}
 
 function buildTemporallySortedProjects(colSnap) {
     let tsps = [];
@@ -40,7 +145,8 @@ function insertProjects(projs) {
 
 	li.classList.add('userProject');
 
-	frag.appendChild(li);
+	// prepend to reverse order
+	frag.prepend(li);
 	li.appendChild(span);
 	li.addEventListener("click", () => {
 	    loadFromUIDs(auth.currentUser.uid, p.id);
@@ -48,7 +154,7 @@ function insertProjects(projs) {
     })
 
     const profileList = document.getElementById("profileList");
-    profileList.insertBefore(frag, document.getElementById("signOutLI"));
+    profileList.insertBefore(frag, document.getElementById("signOut"));
 }
 
 export function initAccountUI() {
@@ -115,35 +221,6 @@ export function initAccountUI() {
 	}
     })
 
-    // returns false if no issues, otherwise returns a string with a reason
-    function isUsernameInvalid(username) {
-	const regex = /^(?=.{3,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$/;
-	
-	const reserved = new Set([
-	    "admin",
-	    "root",
-	    "support",
-	    "help",
-	    "login",
-	    "signup"
-	]);
-	
-	if (!regex.test(username)) {
-	    return "Invalid format";
-	}
-	
-	if (reserved.has(username.toLowerCase())) {
-	    return "Username is reserved";
-	}
-
-	let v = isInvalidDocumentName(username);
-	if (v) {
-	    return "Username invalid: " + v;
-	}
-	
-	return false;
-    }
-    
     
     const loginForm = document.getElementById("login-form");
     loginForm.addEventListener("submit", async (event) => {
@@ -182,6 +259,25 @@ export function initAccountUI() {
 	})
     });
 
+    // this is debounced for longer to avoid extraneous fetches from Firebase
+    const debouncedUsername = debouncedObjFactory(validateUsernameUI, 500);
+    document.getElementById('signup-form-username').
+	addEventListener("input", () => { debouncedUsername.run() });
+    document.getElementById('signup-form-username').
+	addEventListener("blur", () => { debouncedUsername.flush() });
+
+    const debouncedEmail = debouncedObjFactory(validateEmailUI, 300);
+    document.getElementById('signup-form-email').
+	addEventListener("input", () => { debouncedEmail.run() });
+    document.getElementById('signup-form-email').
+	addEventListener("blur", () => { debouncedEmail.flush() });
+
+    const debouncedPassword = debouncedObjFactory(validatePasswordUI, 300);
+    document.getElementById('signup-form-password').
+	addEventListener("input", () => { debouncedPassword.run() });
+    document.getElementById('signup-form-password').
+	addEventListener("blur", () => { debouncedPassword.flush() });
+    
     const signupForm = document.getElementById("signup-form");
     signupForm.addEventListener("submit", async (event) => {
 	event.preventDefault();
@@ -192,51 +288,58 @@ export function initAccountUI() {
 	const email = formData.get("email");
 	const password = formData.get("password");
 
-	let invalid = isUsernameInvalid(username);
-
-	if (invalid) {
-	    alert(invalid);
-	    return;
-	}
-
-	const myDoc = await getDoc(doc(db, "usernames", username.toLowerCase()));
-	if (myDoc.exists()) {
-	    // TODO: Prettier errors
-	    alert("Username not available");
+	if (!validSignup.username || !validSignup.email || !validSignup.password) {
+	    if (!validSignup.username) {
+		errorShake(document.getElementById("signup-form-username-validation"));
+	    }
+	    if (!validSignup.email) {
+		errorShake(document.getElementById("signup-form-email-validation"));
+	    }
+	    if (!validSignup.password) {
+		errorShake(document.getElementById("signup-form-password-validation"));
+	    }
 	    return
 	}
-	
-	if (password.length < 6) {
-	    // TODO: prettier errors
-	    alert("Password must be at least characters");
-	    return;
-	}
-
-	console.log("Creating account with", email, password);
+	let invalid = isUsernameInvalid(username);
 
 	signup(email, password).then((userCred) => {
-	    // onAuthStateChanged handles some UI
+	    // onAuthStateChanged handles the header UI
 
 	    setDoc(doc(db, "usernames", username.toLowerCase()), {
 		uid: userCred.user.uid,
 		email: email
 	    }).catch((error) => {
-		console.log(error);
-		alert("Couldn't write username (but account exists)");
+		// this should be rare and (hopefully) not be an issue for users,
+		//    so doesn't actually get displayed
+		console.error(error);
+		logErrors("Couldn't create username: '" + username.toLowerCase() +
+			  "' with uid: '" + userCred.user.uid + "'",
+			 error.message);
 	    });
 
 	    setDoc(doc(db, "users", userCred.user.uid), {
 		displayName: username,
-		createdAt: Date.now()
+		createdAt: serverTimestamp()
 	    }).catch((error) => {
-		console.log("Couldn't create user profile in firebase");
+		// this should be rare and (hopefully) not be an issue for users,
+		//    so doesn't actually get displayed
+		console.error("Couldn't create user profile in firebase");
+		logErrors("Couldn't create user profile for uid: '" + userCred.user.uid + "'",
+			 error.message);
 	    })
 	    
 	    signupForm.reset();
 	    signupDialog.hidePopover();
 	}).catch((error) => {
-	    // TODO: handle errors
-	    console.log(error, error.code, error.message);
+	    // TODO: handle all errors
+	    if (error.code === 'auth/email-already-in-use') {
+		const valEl = document.getElementById("signup-form-email-validation");
+		valEl.textContent = 'An account already exists for that email. Try logging in instead';
+		errorShake(valEl);
+	    } else {
+		console.log(error, error.code, error.message);
+		logErrors("Error creating account with code: '" + error.code + "'", error.message);
+	    }
 	})
     });
 
