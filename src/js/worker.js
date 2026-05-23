@@ -6,6 +6,7 @@ let interruptBuffer;
 
 async function init() {
     pyodide = await loadPyodide();
+    const decoder = new TextDecoder();
 
     /* this may be useful when dealing with STDIN later,
     // but input is overwritten to not use STDIN (which is the main way
@@ -22,6 +23,34 @@ async function init() {
 	},
     }); */
 
+    function writeFactory(stream) {
+	return (data) => {
+	    let text;
+	    let bytesWritten;
+	    
+	    if (typeof data === "number") {
+		text = decoder.decode(new Uint8Array([data]));
+		bytesWritten = 1
+	    } else {
+		text = decoder.decode(data);
+		bytesWritten = data.length;
+	    }
+
+	    self.postMessage({ type: stream, message: text });
+	    return bytesWritten;
+	}
+    }
+    
+    pyodide.setStdout({
+	write: writeFactory("stdout")
+    });
+
+    pyodide.setStderr({
+	write: writeFactory("stderr")
+    });
+
+    // this batched version wasn't flushing properly, so was moved to the above write implementation
+    /*
     pyodide.setStdout({
 	batched: (text) => {
 	    self.postMessage({ type: "stdout", message: text });
@@ -32,7 +61,7 @@ async function init() {
 	batched: (text) => {
 	    self.postMessage({ type: "stderr", message: text });
 	}
-    });
+    });*/
 
     // refactor these imports into a wheel once stable
     console.log("Hacky python import"); 
@@ -145,6 +174,9 @@ turtle._CFG['canvheight'] = ${graphicsHeight}`);
 	    }
 	    
 	    if (hasRun) {
+		// flush the output
+		await pyodide.runPythonAsync(`print('', end='', flush=True)`);
+
 		if (hasRun === true) {
 		    self.postMessage({ type: "result", message: undefined });
 		} else {
