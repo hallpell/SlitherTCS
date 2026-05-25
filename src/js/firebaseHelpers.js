@@ -19,7 +19,7 @@ export function isInvalidDocumentName(docName) {
 export async function logErrors(context, message) {
     addDoc(collection(db, "clientErrors"), {
 	time: serverTimestamp(),
-	context: context,
-	errorMessage: message
+	context: context.substring(0,500),
+	errorMessage: message.substring(0,5000)
     })
 }

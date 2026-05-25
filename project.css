@@ -43,7 +43,7 @@ h3 {
     width: 30%;
 }
 
-.signup-validation {
+.auth-validation {
     font-family: arial;
     font-size: 10px;
     color: red;
@@ -97,7 +97,6 @@ h3 {
 
     margin: 0;
     padding: 0;
-    padding-left: 6px;
 }
 
 #profileDropdown>ul {
@@ -109,11 +108,18 @@ h3 {
 
 #profileDropdown>ul>li {
     padding-top: 2px;
+    padding-left: 6px;
 }
 
 #profileDropdown>ul>li:hover {
     cursor: pointer;
     background-color: #ccc;
+}
+
+#signup-to-login, #login-to-signup {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #0645ad;
 }
 
 .rotate {

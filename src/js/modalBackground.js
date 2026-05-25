@@ -1,9 +1,18 @@
 export function toggleDBGopen() {
     const dialogBackgrounds = document.getElementById('dialogBackgrounds')
 
-    if (dialogBackgrounds.classList.contains("open")) {
-	dialogBackgrounds.classList.remove("open");
-    } else {
+    const modals = document.querySelectorAll('.modal');
+
+    let modalOpen = false;
+    modals.forEach((el) => {
+	if (el.checkVisibility()) {
+	    modalOpen = true;
+	}
+    })
+    
+    if (modalOpen) {
 	dialogBackgrounds.classList.add("open");
+    } else {
+	dialogBackgrounds.classList.remove("open");
     }
 }

@@ -105,7 +105,7 @@ function validatePasswordUI() {
     const valElement = document.getElementById("signup-form-password-validation");
     
     if (proposedPassword.length < 6) {
-	valElement.textContent = 'Password must be at least 6 characters long';
+	valElement.textContent = 'Password must be at least 6 characters';
 	validSignup.password = false;
 	return false;
     } else {
@@ -163,6 +163,16 @@ export function initAccountUI() {
     loginDialog.addEventListener("toggle", toggleDBGopen);
     signupDialog.addEventListener("toggle", toggleDBGopen);
 
+    document.getElementById("login-to-signup").addEventListener("click", () => {
+	signupDialog.showPopover();
+	loginDialog.hidePopover();
+    })
+
+    document.getElementById("signup-to-login").addEventListener("click", () => {
+	loginDialog.showPopover();
+	signupDialog.hidePopover();
+    })
+
     document.getElementById("newProject").addEventListener("click", () => {
 	// TODO: Complain if project is dirty
 	setEditor("");
@@ -207,6 +217,7 @@ export function initAccountUI() {
 
 	    // add all user projects to dropdown menu allowing them to load projects
 	    getDocs(collection(db, 'users', user.uid, 'projects')).then((colSnapshot) => {
+		// TODO: handle 0 projects intelligently
 		let tsps = buildTemporallySortedProjects(colSnapshot);
 		insertProjects(tsps);
 	    }).catch((error) => {
@@ -239,6 +250,11 @@ export function initAccountUI() {
 	    const snap = await getDoc(doc(db, "usernames", identifier.toLowerCase()));
 	    if (snap.exists()) {
 		email = snap.data().email;
+	    } else {
+		const valEl = document.getElementById("login-form-username-validation")
+		valEl.textContent = 'Username not found';
+		errorShake(valEl);
+		return
 	    }
 	    
 	} else {
@@ -253,9 +269,34 @@ export function initAccountUI() {
 	    loginForm.reset();
 	    loginDialog.hidePopover();
 	}).catch((error) => {
-	    // TODO: Handle errors + display reasonably
-	    console.error("Error logging in:");
-	    console.error(error);
+	    if (error.code === 'auth/invalid-email') {
+		const valEl = document.getElementById("login-form-username-validation");
+		valEl.textContent = 'Invalid email';
+		errorShake(valEl);
+	    } else if (error.code === 'auth/invalid-credential' ||
+		       error.code === 'auth/wrong-password' ||
+		       error.code === 'auth/user-not-found') {
+		const valEl = document.getElementById("login-form-username-validation");
+		valEl.textContent = 'Invalid credentials';
+		errorShake(valEl)
+		const valEl2 = document.getElementById("login-form-password-validation");
+		valEl2.textContent = 'Invalid credentials';
+		errorShake(valEl2);
+	    } else if (error.code === 'auth/too-many-requests') {
+		const valEl = document.getElementById("login-form-password-validation");
+		valEl.textContent = 'Too many login attempts. Please try again later';
+		errorShake(valEl);
+	    } else if (error.code === 'auth/network-request-failed') {
+		const valEl = document.getElementById("login-form-username-validation");
+		valEl.textContent = 'Network error';
+		errorShake(valEl);		
+	    } else {
+		const valEl = document.getElementById("login-form-username-validation");
+		valEl.textContent = 'Failed to login: ' + error.code;
+		errorShake(valEl);
+		console.log(error, error.code, error.message);
+		logErrors("Error creating account with weird code: '" + error.code + "'", error.message);
+	    }
 	})
     });
 
@@ -331,14 +372,28 @@ export function initAccountUI() {
 	    signupForm.reset();
 	    signupDialog.hidePopover();
 	}).catch((error) => {
-	    // TODO: handle all errors
 	    if (error.code === 'auth/email-already-in-use') {
 		const valEl = document.getElementById("signup-form-email-validation");
 		valEl.textContent = 'An account already exists for that email. Try logging in instead';
 		errorShake(valEl);
+	    } else if (error.code === 'auth/invalid-email') {
+		const valEl = document.getElementById("signup-form-email-validation");
+		valEl.textContent = 'Submitted email invalid';
+		errorShake(valEl);
+	    } else if (error.code === 'auth/weak-password') {
+		const valEl = document.getElementById("signup-form-password-validation");
+		valEl.textContent = 'Password must be at least 6 characters';
+		errorShake(valEl);
+	    } else if (error.code === 'auth/network-request-failed') {
+		const valEl = document.getElementById("signup-form-username-validation");
+		valEl.textContent = 'Network error';
+		errorShake(valEl);
 	    } else {
+		const valEl = document.getElementById("signup-form-username-validation");
+		valEl.textContent = 'Failed to create account: ' + error.code;
+		errorShake(valEl);
 		console.log(error, error.code, error.message);
-		logErrors("Error creating account with code: '" + error.code + "'", error.message);
+		logErrors("Error creating account with weird code: '" + error.code + "'", error.message);
 	    }
 	})
     });

@@ -1,4 +1,4 @@
-import { doc, collection, addDoc, setDoc, getDoc, runTransaction }
+import { doc, collection, addDoc, setDoc, getDoc, runTransaction, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 import { getEditor } from "./codeMirrorInit.js";
 import { db, auth } from "./firebase.js";
@@ -31,15 +31,15 @@ async function createNewProject(uid, projectName, code) {
 	    transaction.set(projRef, {
 		code: code,
 		name: projectName,
-		createdAt: Date.now(),
-		updatedAt: Date.now(),
+		createdAt: serverTimestamp(),
+		updatedAt: serverTimestamp(),
 		ownerId: uid,
 		isPublic: true
 	    });
 
 	    transaction.set(nameRef, {
 		projectId: projRef.id,
-		createdAt: Date.now()
+		createdAt: serverTimestamp()
 	    });
 	})
 	return { status: true, projectId: projRef.id };
@@ -55,7 +55,7 @@ async function createNewProject(uid, projectName, code) {
 function updateProject(uid, projId, code) {
     setDoc(doc(db, "users", uid, "projects", projId), {
 	code: code,
-	updatedAt: Date.now()
+	updatedAt: serverTimestamp()
     }, { merge: true })
 }
 
