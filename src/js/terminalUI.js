@@ -60,7 +60,7 @@ export async function initTerminalUI() {
 	if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
 	    e.preventDefault();
 	    console.log("Saw Ctrl+C");
-	    sendInterrupt();
+	    main.sendInterrupt();
 	}
     });
 }

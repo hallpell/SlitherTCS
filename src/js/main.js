@@ -42,7 +42,9 @@ worker.postMessage({ type: "graphics_dims",
      width: Math.floor(document.getElementById("graphics").getBoundingClientRect().width), 
      height: Math.floor(document.getElementById("graphics").getBoundingClientRect().height) });
 
-function sendInterrupt() {
+export function sendInterrupt() {
+    // TODO: only send if we're running code (if you interrupt while nothing is running, you
+    //   get a weird error the next time you try to run things)
     Atomics.store(interruptBuffer, 0, 2); // 2 = SIGINT-like signal
     Atomics.notify(interruptBuffer, 0);
 }
