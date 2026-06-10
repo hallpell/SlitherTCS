@@ -74,7 +74,6 @@ export function initSaveUI() {
 
 	const code = getEditor().getValue();
 
-	// TODO handle re-saving an existing project
 	// get projectID of current project
 	const projId = getProjectId();
 	// getOwns() in case we are reading someone else's project -
@@ -121,13 +120,14 @@ export function initSaveUI() {
 		// TODO: fix alert
 		console.log("Function gave false status");
 		alert(retVal.errorMessage);
-		return; // this prevents us from closing the saving dialog - probably correct?
+		return; // I'd like to prevent closing the saving dialog here
 	    }
 	} catch (error) {
-	    if (error.errorMessage === "Form not submitted") {
+	    if (error.message === "Form not submitted") {
 		// pass, this is fine
 	    } else {
 		console.log("Error while making new project??")
+		console.log(error.message);
 		alert(error);
 	    }
 	}

@@ -12,11 +12,11 @@
   <body>
     <div id='dialogBackgrounds'></div>
     
-    <div id=header>
-      <div id=accountState>
-	<button id=login popovertarget='login-dialog'>Login</button>
-	<button id=createAccount popovertarget='signup-dialog'>Sign Up</button>
-	<button popovertarget='profileDropdown' id=accountProfile style='anchor-name: --profile_button'>Profile</button>
+    <div id='header'>
+      <div id='accountState'>
+	<button id='login' popovertarget='login-dialog'>Login</button>
+	<button id='createAccount' popovertarget='signup-dialog'>Sign Up</button>
+	<button id='accountProfile' popovertarget='profileDropdown'  style='anchor-name: --profile_button'>Profile</button>
 	<div popover id='profileDropdown'>
 	  <ul id='profileList'>
 	    <li id='newProject'>
@@ -28,12 +28,12 @@
 	  </ul>
 	</div>
       </div>
-      <div id=codeState>
-	<button id=runCode>Run</button>
-	<button id=stopCode>Stop</button>
+      <div id='codeState'>
+	<button id='runCode'>Run</button>
+	<button id='stopCode'>Stop</button>
       </div>
-      <div id=saveState>
-	<button id=save>Save</button>
+      <div id='saveState'>
+	<button id='save'>Save</button>
       </div>
     </div>
 
@@ -73,8 +73,9 @@
 	</div>
 	<div id='signup-body'>
 	  <div class='form-group'>
-	    <span>Username (don't use your real name [MAKE TOOLTIP])</span><br>
+	    <span>Username</span><br>
 	    <input id='signup-form-username' type='text' name='username' autocomplete='username' required>
+	    <div popover='hint' id='real-name-popover' class='popover-hint'>Don't use your real name</div>
 	    <br><span id='signup-form-username-validation' class='auth-validation'></span>
 	  </div>
 	  <div class='form-group'>
@@ -100,23 +101,26 @@
 
     <dialog popover id='project-naming-dialog' class='modal' popover='auto'>
       <form id='project-naming-form'>
-	<input id='project-name-input' type='text' name='project_name' placeholder='Project Name' required>
-	<div class='dialogButtonDiv'>
+	<div class='form-group centered-form-group'>
+	  <span>Project Name</span><br>
+	  <input id='project-name-input' type='text' name='project_name' required>
+	</div>
+	<div class='form-group form-button-group'>
 	  <button type='submit'>Save</button>
 	  <button type='button' popovertarget='project-naming-dialog'>Cancel</button>
 	</div>
       </form>
     </dialog>
         
-    <div id=mainContainer>
-      <div id=collapsedCode>
+    <div id='mainContainer'>
+      <div id='collapsedCode'>
 	<span class="rotate">Code</span>
       </div>
-      <div id=code class=flexbox-item>
-	<div id=codeBar>
+      <div id='code' class='flexbox-item'>
+	<div id='codeBar'>
 	  <div>
-	    <span id=codeLabel>Code</span>
-	    <select id=cmTheme>
+	    <span id='codeLabel'>Code</span>
+	    <select id='cmTheme'>
 	      <option value='eclipse'>eclipse</option>
 	      <option value='elegant'>elegant</option>
 	      <option value='ambiance'>ambiance</option>
@@ -124,37 +128,37 @@
 	      <option value='cobalt'>cobalt</option>
 	    </select>
 	  </div>
-	  <img id=codeMinimize src='./images/minimize.png' height=16 width=16 class='minimize'></img>
+	  <img id='codeMinimize' src='./images/minimize.png' height=16 width=16 class='minimize'></img>
 	</div>
-	<div id=editor class=flexbox-item></div>
+	<div id='editor' class=flexbox-item></div>
       </div>
 
-      <div id=collapsedTerminal>
+      <div id='collapsedTerminal'>
 	<span class="rotate">Terminal</span>
       </div>
-      <div id=terminal class="flexbox-item terminal-light-theme">
-	<div id=terminalBar>
+      <div id='terminal' class="flexbox-item terminal-light-theme">
+	<div id='terminalBar'>
 	  <div>
-	    <span id=terminalLabel>Terminal</span>
-	    <select id=terminalTheme>
+	    <span id='terminalLabel'>Terminal</span>
+	    <select id='terminalTheme'>
 	      <option value='light'>light</option>
 	      <option value='dark'>dark</option>
 	    </select>
 	  </div>
-	  <img id=terminalMinimize src='./images/minimize.png' height=16 width=16 class='minimize'></img>
+	  <img id='terminalMinimize' src='./images/minimize.png' height=16 width=16 class='minimize'></img>
 	</div>
-	<div id=output><input id="repl-input" autocomplete="off"></input></div>
+	<div id='output'><input id='repl-input' autocomplete="off"></input></div>
       </div>
 
-      <div id=collapsedGraphics>
+      <div id='collapsedGraphics'>
 	<span class="rotate">Graphics</span>
       </div>
-      <div id=graphicsContainer class=flexbox-item>
-	<div id=graphicsBar>
-	  <span id=graphicsLabel>Graphics</span>
-	  <img id=graphicsMinimize src='./images/minimize.png' height=16 width=16 class='minimize'></img>
+      <div id='graphicsContainer' class=flexbox-item>
+	<div id='graphicsBar'>
+	  <span id='graphicsLabel'>Graphics</span>
+	  <img id='graphicsMinimize' src='./images/minimize.png' height=16 width=16 class='minimize'></img>
 	</div>
-	<div id=graphics></div>
+	<div id='graphics'></div>
       </div>
     </div>
 

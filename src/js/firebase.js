@@ -6,14 +6,14 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-aut
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyBQO19SSny8OcjA99VQ8bgKRUkPIkL0uLo",
-    authDomain: "slithertcs.firebaseapp.com",
-    projectId: "slithertcs",
-    storageBucket: "slithertcs.firebasestorage.app",
-    messagingSenderId: "274730040265",
-    appId: "1:274730040265:web:3a6d9e8455c579b3684618"
+    apiKey: "AIzaSyBZCtX7Ygcp0yUvAVdGZejLK8l2iGNhpTU",
+    authDomain: "slithertcs-b7d93.firebaseapp.com",
+    projectId: "slithertcs-b7d93",
+    storageBucket: "slithertcs-b7d93.firebasestorage.app",
+    messagingSenderId: "733383008062",
+    appId: "1:733383008062:web:9a395a020b91d031b5966f",
+    measurementId: "G-6J39R2KXWZ"
 };
-
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

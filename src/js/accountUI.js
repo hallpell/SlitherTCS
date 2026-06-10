@@ -300,6 +300,21 @@ export function initAccountUI() {
 	})
     });
 
+    // add tooltip to when username is selected
+    let unInput = document.getElementById("signup-form-username")
+    unInput.addEventListener("focus", () => {
+	// this janky timeout is to avoid the popover from showing, then immediately
+	//   hiding because it recognizes a click outside of it's area
+	setTimeout(() => {
+	    document.getElementById("real-name-popover").showPopover({source: unInput});
+	}, 100);
+    })
+
+    unInput.addEventListener("blur", () => {
+	document.getElementById("real-name-popover").hidePopover();
+    })
+								    
+    
     // this is debounced for longer to avoid extraneous fetches from Firebase
     const debouncedUsername = debouncedObjFactory(validateUsernameUI, 500);
     document.getElementById('signup-form-username').

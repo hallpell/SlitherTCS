@@ -12,6 +12,15 @@ h3 {
     text-align: center;
 }
 
+.popover-hint {
+    margin-bottom: 4px;
+    background-color: #264649;
+    color: white;
+    position: absolute;
+    position-area: top;
+    border: none;
+}
+
 #login-body, #signup-body {
     margin: 4px;
     margin-bottom: 20px;
@@ -24,6 +33,12 @@ h3 {
 .form-group {
     width: 90%;
     margin-bottom: 15px;
+}
+
+.centered-form-group {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
 }
 
 .form-group>input {

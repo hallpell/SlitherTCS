@@ -6,6 +6,10 @@ export async function initTerminalUI() {
     const runnerModule =  await import("./runner.js");
 
     document.getElementById("terminal").addEventListener("click", (e) => {
+	// don't focus if we click on the bar
+	if (document.getElementById("terminalBar").contains(e.target)) {
+	    return;
+	}
 	ourInput.focus();
     })
     
