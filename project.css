@@ -58,7 +58,7 @@ h3 {
     width: 30%;
 }
 
-.auth-validation {
+.auth-validation, .naming-validation {
     font-family: arial;
     font-size: 10px;
     color: red;

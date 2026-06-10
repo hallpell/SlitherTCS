@@ -7,18 +7,13 @@ import { loadFromUIDs } from "./loading.js";
 import { isInvalidDocumentName, logErrors } from "./firebaseHelpers.js";
 import { debouncedObjFactory } from "./jsUtils.js";
 import { setProjectName, setProjectId, setOwns } from "./currentProject.js";
+import { errorShake } from "./DOMhelpers.js";
+
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 import { doc, collection, setDoc, getDoc, getDocs, serverTimestamp } from
 "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 let validSignup = { username: false, email: false, password: false };
-
-function errorShake(el) {
-    el.classList.remove("error-shake");
-
-    el.classList.add("error-shake");
-    setTimeout(() => { el.classList.remove("error-shake") }, 500);
-}
 
 // returns false if no issues, otherwise returns a string with a reason
 function isUsernameInvalid(username) {
@@ -115,14 +110,18 @@ function validatePasswordUI() {
     }
 }
 
+// returns an array of objects.
+//   Length of array will equal number of projects in colSnap
+//   Each object will have 'time', 'name', and 'id'
+//   The array will be sorted by the 'time' attributes of the elements
 function buildTemporallySortedProjects(colSnap) {
     let tsps = [];
     colSnap.forEach((d) => {
 	const data = d.data();
 	let val = {
 	    time: data.updatedAt,
-	    name: data.name,
-	    id: d.id
+	    name: data.displayName,
+	    id: data.projectId
 	}
 	
 	// insertion sort
@@ -135,6 +134,8 @@ function buildTemporallySortedProjects(colSnap) {
     return tsps;
 }
 
+// takes the output of buildTemporallySortedProjects and
+//   inserts them into the DOM in profileList
 function insertProjects(projs) {
     const frag = document.createDocumentFragment();
     
@@ -216,7 +217,7 @@ export function initAccountUI() {
 	    })
 
 	    // add all user projects to dropdown menu allowing them to load projects
-	    getDocs(collection(db, 'users', user.uid, 'projects')).then((colSnapshot) => {
+	    getDocs(collection(db, 'users', user.uid, 'projectNames')).then((colSnapshot) => {
 		// TODO: handle 0 projects intelligently
 		let tsps = buildTemporallySortedProjects(colSnapshot);
 		insertProjects(tsps);

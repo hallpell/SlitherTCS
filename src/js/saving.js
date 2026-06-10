@@ -1,23 +1,25 @@
-import { doc, collection, addDoc, setDoc, getDoc, runTransaction, serverTimestamp }
-from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 import { getEditor } from "./codeMirrorInit.js";
 import { db, auth } from "./firebase.js";
 import { toggleDBGopen } from "./modalBackground.js";
-import { openPopoverAsync } from "./popoverPromise.js";
 import { getProjectName, setProjectName, getProjectId,
 	 setProjectId, getOwns, setOwns } from "./currentProject.js";
 import { isInvalidDocumentName } from "./firebaseHelpers.js";
+import { errorShake } from "./DOMhelpers.js";
+
+import { doc, collection, addDoc, setDoc, getDoc, runTransaction, serverTimestamp }
+from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
 
 // return an object with:
 //   status: boolean (succeeded at creating project or not)
 //     if status: true, then contains projectID: string
 //     if status: false, errorMessage: string
-async function createNewProject(uid, projectName, code) {
-    if (isInvalidDocumentName(projectName)) {
+async function createNewProject(uid, projectName, safeProjectName, code) {
+    if (isInvalidDocumentName(safeProjectName)) {
 	return { status: false,
-		 errorMessage: "Invalid project name: " + isInvalidDocumentName(projectName) };
+		 errorMessage: "Invalid project name: " + isInvalidDocumentName(safeProjectName) };
     }
-    const nameRef = doc(db, "users", uid, "projectNames", projectName);
+    const nameRef = doc(db, "users", uid, "projectNames", safeProjectName);
     const projRef = doc(collection(db, "users", uid, "projects"));
 
     try {
@@ -30,7 +32,8 @@ async function createNewProject(uid, projectName, code) {
 
 	    transaction.set(projRef, {
 		code: code,
-		name: projectName,
+		displayName: projectName,
+		safeName: safeProjectName,
 		createdAt: serverTimestamp(),
 		updatedAt: serverTimestamp(),
 		ownerId: uid,
@@ -39,7 +42,9 @@ async function createNewProject(uid, projectName, code) {
 
 	    transaction.set(nameRef, {
 		projectId: projRef.id,
-		createdAt: serverTimestamp()
+		displayName: projectName,
+		createdAt: serverTimestamp(),
+		updatedAt: serverTimestamp()
 	    });
 	})
 	return { status: true, projectId: projRef.id };
@@ -52,9 +57,13 @@ async function createNewProject(uid, projectName, code) {
 }
 
 // this will let any errors populate up, so must be handled
-function updateProject(uid, projId, code) {
+function updateProject(uid, projId, projName, code) {
     setDoc(doc(db, "users", uid, "projects", projId), {
 	code: code,
+	updatedAt: serverTimestamp()
+    }, { merge: true })
+
+    setDoc(doc(db, "users", uid, "projectNames", projName), {
 	updatedAt: serverTimestamp()
     }, { merge: true })
 }
@@ -76,11 +85,12 @@ export function initSaveUI() {
 
 	// get projectID of current project
 	const projId = getProjectId();
+	const curProjName = getProjectName();
 	// getOwns() in case we are reading someone else's project -
 	//   we'd then want to save a new project in the user's name
-	if (projId && getOwns()) {
+	if (projId && curProjName && getOwns()) {
 	    try {
-		updateProject(user.uid, projId, code);
+		updateProject(user.uid, projId, curProjName, code);
 	    } catch (error) {
 		console.log("Error when saving/overwriting existing project");
 		console.error(error);
@@ -90,47 +100,74 @@ export function initSaveUI() {
 
 	// we have a new project for this user, ask them to submit a name
 
+	const namingDialog = document.getElementById("project-naming-dialog");
+	const namingForm = document.getElementById("project-naming-form");
+	
+	// open dialog
+	// attach callback to submit (wait for verification that it worked, then close)
+	// attach callback to close (clean up callbacks)
+
+	async function saveSubmitHandler(event) {
+	    event.preventDefault();
+
+	    let formData = new FormData(namingForm);
+
+	    let projectName = formData.get("project_name");
+	    let safeProjectName = encodeURIComponent(projectName.replaceAll(" ", "-"));
+
+	    try {
+		const retVal = await createNewProject(user.uid, projectName, safeProjectName, code);
+
+		// if saved successfully
+		if (retVal.status) {
+		    setProjectName(projectName);
+		    setProjectId(retVal.projectId);
+		    setOwns(true);
+		    // TODO: URL stuff
+		    //const newURL = "BASE/" + encodeURIComponent(usernameLookup(user.uid)) + "/" +
+		    //        docRef.id + "/" + encodeURIComponent(project_name)
+		    //  history.pushState(newURL);
+
+		    // TODO: Add new project to profile list
+		    
+		    namingDialog.hidePopover();
+		} else {
+		    const valEl = document.getElementById("project-name-validation");
+		    if (retVal.errorMessage.startsWith("Invalid project name")) {
+			valEl.textContent = "Invalid Project Name";
+			errorShake(valEl);
+		    } else if (retVal.errorMessage.startsWith("Project name already exists")) {
+			valEl.textContent = "You already have a project with that name!";
+			errorShake(valEl);
+		    } else {
+			valEl.textContent = "There was an issue saving your project";
+			errorShake(valEl);
+		    }
+		}
+	    } catch (e) {
+		alert("We shouldn't have gotten here!" + e);
+	    }
+	}
+
+	function saveDialogToggleHandler(event) {
+	    if (event.newState == 'closed') {
+		namingDialog.removeEventListener('toggle', saveDialogToggleHandler);
+		namingForm.removeEventListener('submit', saveSubmitHandler);
+	    }
+	}
+
+	namingDialog.addEventListener('toggle', saveDialogToggleHandler);
+	namingForm.addEventListener('submit', saveSubmitHandler);
+
+	namingForm.reset();
+
 	// if there is an existing project name, we are "remixing" a project, so we
 	//   autopopulate the name but let them edit it
-	const oldProjName = getProjectName();
-	if (oldProjName) {
-	    document.getElementById('project-name-input').value = oldProjName;
+	if (curProjName) {
+	    document.getElementById('project-name-input').value = curProjName;
 	}
-	const namingDialog = document.getElementById("project-naming-dialog");
-
-	let project_name;
-	try {
-	    const formResult = await openPopoverAsync(namingDialog);
-	    project_name = formResult.get("project_name");
-
-	    const retVal = await createNewProject(user.uid, project_name, code);
-
-	    console.log(retVal);
-	    
-	    if (retVal.status) {
-		setProjectName(project_name);
-		setProjectId(retVal.projectId);
-		setOwns(true);
-		// TODO: URL stuff
-		/*const newURL = "BASE/" + encodeURIcomponent(usernameLookup(user.uid)) + "/" +
-		        docRef.id + "/" + encodeURIcomponent(project_name)
-		  history.pushState(newURL);*/
-
-	    } else {
-		// TODO: fix alert
-		console.log("Function gave false status");
-		alert(retVal.errorMessage);
-		return; // I'd like to prevent closing the saving dialog here
-	    }
-	} catch (error) {
-	    if (error.message === "Form not submitted") {
-		// pass, this is fine
-	    } else {
-		console.log("Error while making new project??")
-		console.log(error.message);
-		alert(error);
-	    }
-	}
+	
+	namingDialog.showPopover();
     }
     
     document.getElementById('save').addEventListener("click", save);
