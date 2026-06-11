@@ -1,4 +1,4 @@
-import { worker } from "./workerClient.js";
+import { worker } from "/src/js/workerClient.js";
 // code for initializing and adjusting the layout of the screen
 function collapseEl(toCollapse, toExpand, newDisplayVal) {
     toCollapse.style.display = "none";

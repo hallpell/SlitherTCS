@@ -1,5 +1,5 @@
-import { getEditor } from "./codeMirrorInit.js";
-import { db, auth } from "./firebase.js";
+import { getEditor } from "/src/js/codeMirrorInit.js";
+import { db, auth } from "/src/js/firebase.js";
 import { doc, setDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 export function initThemeUpdates() {

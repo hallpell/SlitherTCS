@@ -1,10 +1,11 @@
-import { getEditor } from "./codeMirrorInit.js";
-import { db, auth } from "./firebase.js";
-import { toggleDBGopen } from "./modalBackground.js";
+import { getEditor } from "/src/js/codeMirrorInit.js";
+import { db, auth } from "/src/js/firebase.js";
+import { toggleDBGopen } from "/src/js/modalBackground.js";
 import { getProjectName, setProjectName, getProjectId,
-	 setProjectId, getOwns, setOwns } from "./currentProject.js";
-import { isInvalidDocumentName } from "./firebaseHelpers.js";
-import { errorShake } from "./DOMhelpers.js";
+	 setProjectId, getOwns, setOwns } from "/src/js/currentProject.js";
+import { isInvalidDocumentName } from "/src/js/firebaseHelpers.js";
+import { errorShake } from "/src/js/DOMhelpers.js";
+import { makeSafe } from "/src/js/jsUtils.js";
 
 import { doc, collection, addDoc, setDoc, getDoc, runTransaction, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
@@ -113,20 +114,24 @@ export function initSaveUI() {
 	    let formData = new FormData(namingForm);
 
 	    let projectName = formData.get("project_name");
-	    let safeProjectName = encodeURIComponent(projectName.replaceAll(" ", "-"));
+	    let safeProjectName = makeSafe(projectName);
 
 	    try {
 		const retVal = await createNewProject(user.uid, projectName, safeProjectName, code);
 
 		// if saved successfully
 		if (retVal.status) {
-		    setProjectName(projectName);
+		    setProjectName(safeProjectName);
 		    setProjectId(retVal.projectId);
 		    setOwns(true);
 		    // TODO: URL stuff
-		    //const newURL = "BASE/" + encodeURIComponent(usernameLookup(user.uid)) + "/" +
-		    //        docRef.id + "/" + encodeURIComponent(project_name)
-		    //  history.pushState(newURL);
+		    const userSnap = await getDoc(doc(db, "users", user.uid));
+		    if (!userSnap.exists()) {
+			logErrors("User doesn't have a profile: '" + user.uid + "'",
+				  "From saving new project");
+		    }
+		    const newURL = "/" + makeSafe(userSnap.data().safeName) + "/" + safeProjectName;
+		    history.pushState({}, "", newURL);
 
 		    // TODO: Add new project to profile list
 		    
@@ -142,6 +147,9 @@ export function initSaveUI() {
 		    } else {
 			valEl.textContent = "There was an issue saving your project";
 			errorShake(valEl);
+			logErrors("Couldn't save new project: '" + projectName +
+			  "' with user: '" + user.uid + "'",
+			 retVal.errorMessage);
 		    }
 		}
 	    } catch (e) {

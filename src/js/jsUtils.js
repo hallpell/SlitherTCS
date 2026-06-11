@@ -1,3 +1,9 @@
+// make arbitrary strings safe for URLs
+//   (also replace ' ' with '-' and lowercase it)
+export function makeSafe(str) {
+    return encodeURIComponent(str.replaceAll(" ", "-").toLowerCase());
+}
+
 export function debounce(func, delay) {
   let timeoutId;
   

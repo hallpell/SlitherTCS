@@ -1,18 +1,18 @@
 // this initializes firebase and got grumpy when I tried to make it 
 //   export an init function, so is just stuck like this at the top
-import "./firebase.js";
+import "/src/js/firebase.js";
 
-import { worker } from "./workerClient.js";
-import { initEditor, getEditor } from "./codeMirrorInit.js";
-import { initThemeUpdates } from "./themeUpdates.js";
-import { initCollapsingUI } from "./collapsingUI.js";
-import { initTerminalDOM } from "./terminalDOM.js";
-import { initMatPlotLibAttacher } from "./matPlotLibAttacher.js"; // TODO: FIX (broken from webWorker)
-import { initWorkerDOM } from "./workerDOM.js";
-import { initTerminalUI } from "./terminalUI.js";
-import { gatherAndRunEditorCode } from "./runner.js";
-import { initAccountUI } from "./accountUI.js";
-import { initSaveUI } from "./saving.js";
+import { worker } from "/src/js/workerClient.js";
+import { initEditor, getEditor } from "/src/js/codeMirrorInit.js";
+import { initThemeUpdates } from "/src/js/themeUpdates.js";
+import { initCollapsingUI } from "/src/js/collapsingUI.js";
+import { initTerminalDOM } from "/src/js/terminalDOM.js";
+import { initMatPlotLibAttacher } from "/src/js/matPlotLibAttacher.js"; // TODO: FIX (broken from webWorker)
+import { initWorkerDOM } from "/src/js/workerDOM.js";
+import { initTerminalUI } from "/src/js/terminalUI.js";
+import { gatherAndRunEditorCode } from "/src/js/runner.js";
+import { initAccountUI } from "/src/js/accountUI.js";
+import { initSaveUI } from "/src/js/saving.js";
 
 initEditor();
 initThemeUpdates();

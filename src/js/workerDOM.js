@@ -1,5 +1,5 @@
-import { worker } from "./workerClient.js";
-import { setTerminalStatus } from "./main.js";
+import { worker } from "/src/js/workerClient.js";
+import { setTerminalStatus } from "/src/js/main.js";
 
 // code to jam turtle graphics into the graphics box
 const elementFromProps = (map) => {

@@ -1,16 +1,16 @@
-import { login, signup, logout } from "./auth.js";
-import { toggleDBGopen } from "./modalBackground.js";
-import { db, auth } from "./firebase.js";
-import { logoutUI, setAccountUI } from "./accountStateUI.js";
-import { setEditor } from "./codeMirrorInit.js";
-import { loadFromUIDs } from "./loading.js";
-import { isInvalidDocumentName, logErrors } from "./firebaseHelpers.js";
-import { debouncedObjFactory } from "./jsUtils.js";
-import { setProjectName, setProjectId, setOwns } from "./currentProject.js";
-import { errorShake } from "./DOMhelpers.js";
+import { login, signup, logout } from "/src/js/auth.js";
+import { toggleDBGopen } from "/src/js/modalBackground.js";
+import { db, auth } from "/src/js/firebase.js";
+import { logoutUI, setAccountUI } from "/src/js/accountStateUI.js";
+import { setEditor } from "/src/js/codeMirrorInit.js";
+import { loadFromUIDs, loadFromNames } from "/src/js/loading.js";
+import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
+import { debouncedObjFactory, makeSafe } from "/src/js/jsUtils.js";
+import { setProjectName, setProjectId, setOwns } from "/src/js/currentProject.js";
+import { errorShake } from "/src/js/DOMhelpers.js";
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-import { doc, collection, setDoc, getDoc, getDocs, serverTimestamp } from
+import { doc, collection, setDoc, getDoc, getDocs, serverTimestamp, runTransaction } from
 "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 let validSignup = { username: false, email: false, password: false };
@@ -61,7 +61,7 @@ async function validateUsernameUI() {
 	return false;
     }
 
-    const snap = await getDoc(doc(db, "usernames", proposedUsername));
+    const snap = await getDoc(doc(db, "usernames", makeSafe(proposedUsername)));
     if (snap.exists()) {
 	valElement.textContent = 'Username not available';
 	validSignup.username = false;
@@ -181,6 +181,8 @@ export function initAccountUI() {
 	setProjectId(null);
 	setOwns(false);
 
+	history.pushState({}, "", "/");
+
 	document.getElementById("profileDropdown").hidePopover();
     })
     
@@ -231,6 +233,25 @@ export function initAccountUI() {
 		el.remove();
 	    })
 	}
+
+	// regardless of if a user is logged in or not, try to load
+	//   a project from the URL. (This is here to ensure that if we
+	//   are trying to navigate to a private project, the user will
+	//   be logged in)
+	const path = window.location.pathname;
+
+	const parts = path.split("/").filter(Boolean);
+
+	// if we have something that looks like a Username and ProjectName
+	if (parts.length == 2) {
+	    // try to load
+	    loadFromNames(parts[0], parts[1]).then((foundProject) => {
+		if (!foundProject) {
+		    // TODO: Non-alert error
+		    alert('Couldn\'t find project "' + parts[1] + '" from user "' + parts[0] + '"');
+		}
+	    });
+	}
     })
 
     
@@ -248,7 +269,7 @@ export function initAccountUI() {
 	if (!identifier.includes("@")) {
 	    username = identifier;
 
-	    const snap = await getDoc(doc(db, "usernames", identifier.toLowerCase()));
+	    const snap = await getDoc(doc(db, "usernames", makeSafe(identifier)));
 	    if (snap.exists()) {
 		email = snap.data().email;
 	    } else {
@@ -257,7 +278,6 @@ export function initAccountUI() {
 		errorShake(valEl);
 		return
 	    }
-	    
 	} else {
 	    email = identifier;
 	}
@@ -357,33 +377,51 @@ export function initAccountUI() {
 	    }
 	    return
 	}
-	let invalid = isUsernameInvalid(username);
+
+	// in case the user is editing the UN last and hits enter before the debounce checks it,
+	//   I want to double check that it's valid cause the database could get weird and need
+	//   manual fixing otherwise
+	const doubleCheckUn = await validateUsernameUI();
+	if (!doubleCheckUn) {
+	    // the validateUsernameUI will already display + shake the proper error message
+	    return
+	}
 
 	signup(email, password).then((userCred) => {
 	    // onAuthStateChanged handles the header UI
-
-	    setDoc(doc(db, "usernames", username.toLowerCase()), {
-		uid: userCred.user.uid,
-		email: email
-	    }).catch((error) => {
-		// this should be rare and (hopefully) not be an issue for users,
-		//    so doesn't actually get displayed
-		console.error(error);
-		logErrors("Couldn't create username: '" + username.toLowerCase() +
+	    try {
+		runTransaction(db, async (transaction) => {
+		    transaction.set(doc(db, "usernames", makeSafe(username)), {
+			uid: userCred.user.uid,
+			email: email
+		    }).catch((error) => {
+			// this should be rare and (hopefully) not be an issue for users,
+			//    so doesn't actually get displayed
+			console.log(error);
+			logErrors("Couldn't create username: '" + makeSafe(username) +
 			  "' with uid: '" + userCred.user.uid + "'",
 			 error.message);
-	    });
+		    })
 
-	    setDoc(doc(db, "users", userCred.user.uid), {
-		displayName: username,
-		createdAt: serverTimestamp()
-	    }).catch((error) => {
-		// this should be rare and (hopefully) not be an issue for users,
-		//    so doesn't actually get displayed
-		console.error("Couldn't create user profile in firebase");
-		logErrors("Couldn't create user profile for uid: '" + userCred.user.uid + "'",
-			 error.message);
-	    })
+		    transaction.set(doc(db, "users", userCred.user.uid), {
+			displayName: username,
+			safeName: makeSafe(username),
+			createdAt: serverTimestamp()
+		    }).catch((error) => {
+			// this should be rare and (hopefully) not be an issue for users,
+			//    so doesn't actually get displayed
+			console.log(error);
+			logErrors("Couldn't create user profile with uid: '" + userCred.user.uid +
+				  "' and username '" + makeSafe(username) + "'",
+				  error.message);
+		    })
+		})
+	    } catch (error) {
+		// this should only be from Firebase errors
+		logErrors("Issue running transaction creating new user: '" + makeSafe(username)
+			  + "' with UID: '" + userCred.user.uid + "'", error.message);
+	    }
+
 	    
 	    signupForm.reset();
 	    signupDialog.hidePopover();

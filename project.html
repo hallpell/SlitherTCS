@@ -1,13 +1,13 @@
 <!doctype html>
 <html>
   <head>
-    <link rel='stylesheet' href='project.css'>
-    <link rel='stylesheet' href='vendor/codemirror/codemirror.css'>
-    <link rel='stylesheet' href='vendor/codemirror/eclipse.css'>
-    <link rel='stylesheet' href='vendor/codemirror/elegant.css'>
-    <link rel='stylesheet' href='vendor/codemirror/ambiance.css'>
-    <link rel='stylesheet' href='vendor/codemirror/blackboard.css'>
-    <link rel='stylesheet' href='vendor/codemirror/cobalt.css'>
+    <link rel='stylesheet' href='/project.css'>
+    <link rel='stylesheet' href='/vendor/codemirror/codemirror.css'>
+    <link rel='stylesheet' href='/vendor/codemirror/eclipse.css'>
+    <link rel='stylesheet' href='/vendor/codemirror/elegant.css'>
+    <link rel='stylesheet' href='/vendor/codemirror/ambiance.css'>
+    <link rel='stylesheet' href='/vendor/codemirror/blackboard.css'>
+    <link rel='stylesheet' href='/vendor/codemirror/cobalt.css'>
   </head>
   <body>
     <div id='dialogBackgrounds'></div>
@@ -129,7 +129,7 @@
 	      <option value='cobalt'>cobalt</option>
 	    </select>
 	  </div>
-	  <img id='codeMinimize' src='./images/minimize.png' height=16 width=16 class='minimize'></img>
+	  <img id='codeMinimize' src='/images/minimize.png' height=16 width=16 class='minimize'></img>
 	</div>
 	<div id='editor' class=flexbox-item></div>
       </div>
@@ -146,7 +146,7 @@
 	      <option value='dark'>dark</option>
 	    </select>
 	  </div>
-	  <img id='terminalMinimize' src='./images/minimize.png' height=16 width=16 class='minimize'></img>
+	  <img id='terminalMinimize' src='/images/minimize.png' height=16 width=16 class='minimize'></img>
 	</div>
 	<div id='output'><input id='repl-input' autocomplete="off"></input></div>
       </div>
@@ -157,18 +157,18 @@
       <div id='graphicsContainer' class=flexbox-item>
 	<div id='graphicsBar'>
 	  <span id='graphicsLabel'>Graphics</span>
-	  <img id='graphicsMinimize' src='./images/minimize.png' height=16 width=16 class='minimize'></img>
+	  <img id='graphicsMinimize' src='/images/minimize.png' height=16 width=16 class='minimize'></img>
 	</div>
 	<div id='graphics'></div>
       </div>
     </div>
 
 
-    <script src='vendor/codemirror/codemirror.js'></script>
-    <script src='vendor/codemirror/mode/python/python.js'></script>
+    <script src='/vendor/codemirror/codemirror.js'></script>
+    <script src='/vendor/codemirror/mode/python/python.js'></script>
 
     <!-- this import of main calls the rest of the JS for this page -->
-    <script type="module" src="./src/js/main.js">
+    <script type="module" src="/src/js/main.js">
 
 
     </script>

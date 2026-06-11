@@ -1,4 +1,3 @@
-//importScripts("https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js");
 import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.mjs";
 
 let pyodide;

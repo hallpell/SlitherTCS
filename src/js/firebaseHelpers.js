@@ -1,4 +1,4 @@
-import { db } from "./firebase.js";
+import { db } from "/src/js/firebase.js";
 import { addDoc, collection } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 // implementing document ID constraints from https://firebase.google.com/docs/firestore/quotas

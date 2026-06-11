@@ -5,7 +5,7 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
-import { auth } from "./firebase.js";
+import { auth } from "/src/js/firebase.js";
 
 export async function signup(email, password) {
   return createUserWithEmailAndPassword(

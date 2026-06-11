@@ -1,9 +1,9 @@
 export async function initTerminalUI() {
     const ourInput = document.getElementById("repl-input");
     const output = document.getElementById("output");
-    const main = await import("./main.js");
-    const workerModule =  await import("./workerClient.js");
-    const runnerModule =  await import("./runner.js");
+    const main = await import("/src/js/main.js");
+    const workerModule =  await import("/src/js/workerClient.js");
+    const runnerModule =  await import("/src/js/runner.js");
 
     document.getElementById("terminal").addEventListener("click", (e) => {
 	// don't focus if we click on the bar
