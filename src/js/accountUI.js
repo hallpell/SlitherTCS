@@ -3,10 +3,10 @@ import { toggleDBGopen } from "/src/js/modalBackground.js";
 import { db, auth } from "/src/js/firebase.js";
 import { logoutUI, setAccountUI } from "/src/js/accountStateUI.js";
 import { setEditor } from "/src/js/codeMirrorInit.js";
-import { loadFromUIDs, loadFromNames } from "/src/js/loading.js";
+import { loadFromUIDs } from "/src/js/loading.js";
 import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
 import { debouncedObjFactory, makeSafe } from "/src/js/jsUtils.js";
-import { setProjectName, setProjectId, setOwns } from "/src/js/currentProject.js";
+import { setProjectName, setProjectId, setOwns, getProjectId } from "/src/js/currentProject.js";
 import { errorShake } from "/src/js/DOMhelpers.js";
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
@@ -163,6 +163,7 @@ export function initAccountUI() {
     const signupDialog = document.getElementById("signup-dialog");
     loginDialog.addEventListener("toggle", toggleDBGopen);
     signupDialog.addEventListener("toggle", toggleDBGopen);
+    document.getElementById("generic-error-dialog").addEventListener("toggle", toggleDBGopen);
 
     document.getElementById("login-to-signup").addEventListener("click", () => {
 	signupDialog.showPopover();
@@ -232,25 +233,6 @@ export function initAccountUI() {
 	    document.querySelectorAll(".userProject").forEach((el) => {
 		el.remove();
 	    })
-	}
-
-	// regardless of if a user is logged in or not, try to load
-	//   a project from the URL. (This is here to ensure that if we
-	//   are trying to navigate to a private project, the user will
-	//   be logged in)
-	const path = window.location.pathname;
-
-	const parts = path.split("/").filter(Boolean);
-
-	// if we have something that looks like a Username and ProjectName
-	if (parts.length == 2) {
-	    // try to load
-	    loadFromNames(parts[0], parts[1]).then((foundProject) => {
-		if (!foundProject) {
-		    // TODO: Non-alert error
-		    alert('Couldn\'t find project "' + parts[1] + '" from user "' + parts[0] + '"');
-		}
-	    });
 	}
     })
 

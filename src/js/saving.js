@@ -124,14 +124,17 @@ export function initSaveUI() {
 		    setProjectName(safeProjectName);
 		    setProjectId(retVal.projectId);
 		    setOwns(true);
-		    // TODO: URL stuff
+
 		    const userSnap = await getDoc(doc(db, "users", user.uid));
 		    if (!userSnap.exists()) {
 			logErrors("User doesn't have a profile: '" + user.uid + "'",
 				  "From saving new project");
 		    }
-		    const newURL = "/" + makeSafe(userSnap.data().safeName) + "/" + safeProjectName;
-		    history.pushState({}, "", newURL);
+		    const newURL = "/" + userSnap.data().safeName + "/" + safeProjectName;
+		    history.pushState({safeUN: userSnap.data().safeName,
+				       safeProjectName: safeProjectName,
+				       projectId: retVal.projectId,
+				       uid: user.uid }, "", newURL);
 
 		    // TODO: Add new project to profile list
 		    
