@@ -1,4 +1,3 @@
-// this will likely be updated to involve the URL
 // the project name we store here is the "Safe name" (as opposed to the display name)
 //   the safe name is what will appear in the URL and should be in the database under:
 //   doc(db, "users", uid, "projectNames", safeName)
@@ -6,6 +5,21 @@
 let curProjectName = null;
 let curProjectId = null;
 let projOwner = false;
+let dirty = false;
+
+export function isDirty() {
+    return dirty;
+}
+
+export function makeDirty() {
+    dirty = true;
+    document.getElementById("save").style.backgroundColor = 'red';
+}
+
+export function makeClean() {
+    dirty = false;
+    document.getElementById("save").style.backgroundColor = 'green';
+}
 
 export function getProjectName() {
     if (curProjectName) {
@@ -38,3 +52,4 @@ export function getOwns() {
 export function setOwns(val) {
     projOwner = !!val; // force to be a boolean with !!
 }
+

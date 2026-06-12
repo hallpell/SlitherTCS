@@ -1,7 +1,7 @@
-import { setEditor } from "/src/js/codeMirrorInit.js";
+import { setEditor } from "/src/js/codeMirror.js";
 import { db, auth } from "/src/js/firebase.js";
 import { setProjectName, setProjectId, setOwns,
-         getProjectName, getProjectId } from "/src/js/currentProject.js";
+         getProjectName, getProjectId, makeClean } from "/src/js/currentProject.js";
 import { makeSafe } from "/src/js/jsUtils.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
@@ -19,7 +19,8 @@ export function loadFromUIDs(userId, projectId, updateState=true, pushState=true
 	    setProjectName(snap.data().safeName);
 	    setProjectId(projectId);
 	    setOwns(userId == auth.currentUser.uid);
-
+	    makeClean();
+	    
 	    if (updateState) {
 		getDoc(doc(db, 'users', userId)).then((userSnap) => {
 		    const newState = {safeUN: userSnap.data().safeName,
@@ -70,27 +71,30 @@ export async function loadFromURL() {
     // if this looks like a username + projectName
     if (parts.length == 2) {
 	// try to load it
-	loadFromNames(parts[0], parts[1]).then((foundProject) => {
-	    // if we can't load it, give an error
-	    if (!foundProject) {
-		const dialog = document.getElementById('generic-error-dialog');
-		const textDiv = document.getElementById('generic-error-text');
-		textDiv.textContent = "Couldn\'t find project '" + parts[1] +
-		    "' from user '" + parts[0] + "'";
-		// if we fail to load, empty the project portion of the URL
-		//   (if the user mis-typed, their previous attempt can be accessed/edited with
-		//    the back button, which won't re-try to load immediately)
-		history.pushState({}, "", "/");
-		dialog.showPopover();
-	    }
-	});
+	const foundProject = loadFromNames(parts[0], parts[1]);
+	// if we can't load it, give an error
+	if (!foundProject) {
+	    const dialog = document.getElementById('generic-error-dialog');
+	    const textDiv = document.getElementById('generic-error-text');
+	    textDiv.textContent = "Couldn\'t find project '" + parts[1] +
+		"' from user '" + parts[0] + "'";
+	    // if we fail to load, empty the project portion of the URL
+	    //   (if the user mis-typed, their previous attempt can be accessed/edited with
+	    //    the back button, which won't re-try to load immediately)
+	    history.pushState({}, "", "/");
+	    dialog.showPopover();
+	    return false;
+	}
+	return true;
     }
+    return false;
 }
 
 export async function initLoad() {
     await auth.authStateReady();
 
     loadFromURL();
+    makeClean();
 
     window.addEventListener("popstate", async (event) => {
 	if (Object.hasOwn(event.state, "safeUN") &&

@@ -1,6 +1,6 @@
 import { worker } from "/src/js/workerClient.js"
 import { setTerminalStatus } from "/src/js/main.js"
-import { getEditor } from "/src/js/codeMirrorInit.js"
+import { getEditor } from "/src/js/codeMirror.js"
 
 export async function runEditorCode(code){
     console.log("Starting to run editor code", code);

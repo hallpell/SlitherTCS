@@ -2,7 +2,7 @@ import { login, signup, logout } from "/src/js/auth.js";
 import { toggleDBGopen } from "/src/js/modalBackground.js";
 import { db, auth } from "/src/js/firebase.js";
 import { logoutUI, setAccountUI } from "/src/js/accountStateUI.js";
-import { setEditor } from "/src/js/codeMirrorInit.js";
+import { setEditor } from "/src/js/codeMirror.js";
 import { loadFromUIDs } from "/src/js/loading.js";
 import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
 import { debouncedObjFactory, makeSafe } from "/src/js/jsUtils.js";

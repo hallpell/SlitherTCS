@@ -1,4 +1,4 @@
-import { getEditor } from "/src/js/codeMirrorInit.js";
+import { getEditor } from "/src/js/codeMirror.js";
 import { db, auth } from "/src/js/firebase.js";
 import { doc, setDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 

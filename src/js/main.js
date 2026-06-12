@@ -3,7 +3,7 @@
 import "/src/js/firebase.js";
 
 import { worker } from "/src/js/workerClient.js";
-import { initEditor, getEditor } from "/src/js/codeMirrorInit.js";
+import { initEditor, getEditor } from "/src/js/codeMirror.js";
 import { initThemeUpdates } from "/src/js/themeUpdates.js";
 import { initCollapsingUI } from "/src/js/collapsingUI.js";
 import { initTerminalDOM } from "/src/js/terminalDOM.js";
