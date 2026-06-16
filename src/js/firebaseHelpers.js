@@ -1,5 +1,5 @@
 import { db } from "/src/js/firebase.js";
-import { addDoc, collection } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+import { addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 // implementing document ID constraints from https://firebase.google.com/docs/firestore/quotas
 // returns a string with a reason if invalid, false if no problems detected
@@ -21,5 +21,7 @@ export async function logErrors(context, message) {
 	time: serverTimestamp(),
 	context: context.substring(0,500),
 	errorMessage: message.substring(0,5000)
+    }).catch(error => {
+	console.log(error);
     })
 }

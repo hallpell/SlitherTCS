@@ -61,7 +61,11 @@ async function validateUsernameUI() {
 	return false;
     }
 
-    const snap = await getDoc(doc(db, "usernames", makeSafe(proposedUsername)));
+    try {
+	const snap = await getDoc(doc(db, "usernames", makeSafe(proposedUsername)));
+    } catch (error) {
+	console.error(error);
+    }
     if (snap.exists()) {
 	valElement.textContent = 'Username not available';
 	validSignup.username = false;
@@ -222,6 +226,9 @@ export function initAccountUI() {
 	    // add all user projects to dropdown menu allowing them to load projects
 	    getDocs(collection(db, 'users', user.uid, 'projectNames')).then((colSnapshot) => {
 		// TODO: handle 0 projects intelligently
+		if (colSnapshot.length === 0) {
+		    return
+		}
 		let tsps = buildTemporallySortedProjects(colSnapshot);
 		insertProjects(tsps);
 	    }).catch((error) => {
@@ -251,7 +258,11 @@ export function initAccountUI() {
 	if (!identifier.includes("@")) {
 	    username = identifier;
 
-	    const snap = await getDoc(doc(db, "usernames", makeSafe(identifier)));
+	    try {
+		const snap = await getDoc(doc(db, "usernames", makeSafe(identifier)));
+	    } catch (error) {
+		console.error(error);
+	    }
 	    if (snap.exists()) {
 		email = snap.data().email;
 	    } else {
@@ -370,40 +381,30 @@ export function initAccountUI() {
 	}
 
 	signup(email, password).then((userCred) => {
-	    // onAuthStateChanged handles the header UI
 	    try {
 		runTransaction(db, async (transaction) => {
 		    transaction.set(doc(db, "usernames", makeSafe(username)), {
 			uid: userCred.user.uid,
 			email: email
-		    }).catch((error) => {
-			// this should be rare and (hopefully) not be an issue for users,
-			//    so doesn't actually get displayed
-			console.log(error);
-			logErrors("Couldn't create username: '" + makeSafe(username) +
-			  "' with uid: '" + userCred.user.uid + "'",
-			 error.message);
 		    })
 
 		    transaction.set(doc(db, "users", userCred.user.uid), {
 			displayName: username,
 			safeName: makeSafe(username),
 			createdAt: serverTimestamp()
-		    }).catch((error) => {
-			// this should be rare and (hopefully) not be an issue for users,
-			//    so doesn't actually get displayed
-			console.log(error);
-			logErrors("Couldn't create user profile with uid: '" + userCred.user.uid +
-				  "' and username '" + makeSafe(username) + "'",
-				  error.message);
 		    })
+
 		})
+		// when we signup, onAuthStateChange will run before these transactions are
+		//   recognized, so we set our new username after half a second
+		setTimeout(() => {
+		    setAccountUI(username)
+		}, 500);
 	    } catch (error) {
 		// this should only be from Firebase errors
 		logErrors("Issue running transaction creating new user: '" + makeSafe(username)
 			  + "' with UID: '" + userCred.user.uid + "'", error.message);
 	    }
-
 	    
 	    signupForm.reset();
 	    signupDialog.hidePopover();

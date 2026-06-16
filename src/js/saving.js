@@ -70,40 +70,7 @@ function updateProject(uid, projId, projName, code) {
     }, { merge: true })
 }
 
-async function save() {
-    // if no changes since last save, don't do anything
-    if (!isDirty) { return };
-    
-    const user = auth.currentUser;
-    
-    if (!user) {
-	const dialog = document.getElementById('generic-error-dialog');
-	const textDiv = document.getElementById('generic-error-text');
-	textDiv.textContent = "Please log in before saving your project";
-	dialog.showPopover();
-	return
-    }
-    
-    const code = getEditor().getValue();
-    
-    // get projectID of current project
-    const projId = getProjectId();
-    const curProjName = getProjectName();
-    // getOwns() in case we are reading someone else's project -
-    //   we'd then want to save a new project in the user's name
-    if (projId && curProjName && getOwns()) {
-	try {
-	    updateProject(user.uid, projId, curProjName, code);
-	    makeClean();
-	} catch (error) {
-	    console.log("Error when saving/overwriting existing project");
-	    console.error(error);
-	}
-	return; // we've saved an existing project, exit
-    }
-    
-    // we have a new project for this user, ask them to submit a name
-    
+async function nameAndSave() {
     const namingDialog = document.getElementById("project-naming-dialog");
     const namingForm = document.getElementById("project-naming-form");
     
@@ -183,14 +150,60 @@ async function save() {
     }
     
     namingDialog.showPopover();
+} // nameAndSave
+
+async function save() {
+    // if no changes since last save, don't do anything
+    if (!isDirty) { return };
+    
+    const user = auth.currentUser;
+    
+    if (!user) {
+	const dialog = document.getElementById('generic-error-dialog');
+	const textDiv = document.getElementById('generic-error-text');
+	textDiv.textContent = "Please log in before saving your project";
+	dialog.showPopover();
+	return
+    }
+    
+    const code = getEditor().getValue();
+    
+    // get projectID of current project
+    const projId = getProjectId();
+    const curProjName = getProjectName();
+    // getOwns() in case we are reading someone else's project -
+    //   we'd then want to save a new project in the user's name
+    if (projId && curProjName && getOwns()) {
+	try {
+	    updateProject(user.uid, projId, curProjName, code);
+	    makeClean();
+	} catch (error) {
+	    console.log("Error when saving/overwriting existing project");
+	    console.error(error);
+	}
+	return; // we've saved an existing project, exit
+    }
+    
+    // we have a new project for this user, ask them to submit a name
+    return nameAndSave();
 } // save
+
+async function autosaveInit() {
+    // TODO: implement
+}
 
 export function initSaveUI() {
     document.getElementById("project-naming-dialog").addEventListener("toggle", toggleDBGopen);
 
-    getEditor().on("change", makeDirty);
+    const editor = getEditor();
+
+    editor.on("change", makeDirty);
+    editor.addKeyMap({
+	"Ctrl-S": save,
+	"Cmd-S": save
+    })
     
     document.getElementById('save').addEventListener("click", save);
 
-    // TODO: autosave
+    autosaveInit();
 }
