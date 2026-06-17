@@ -8,6 +8,7 @@ import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
 import { debouncedObjFactory, makeSafe } from "/src/js/jsUtils.js";
 import { setProjectName, setProjectId, setOwns, getProjectId } from "/src/js/currentProject.js";
 import { errorShake } from "/src/js/DOMhelpers.js";
+import { setAutosave } from "/src/js/autosaveState.js";
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 import { doc, collection, setDoc, getDoc, getDocs, serverTimestamp, runTransaction } from
@@ -212,6 +213,10 @@ export function initAccountUI() {
 			const terminalThemeOption = document.getElementById("terminalTheme");
 			terminalThemeOption.value = data.terminalTheme;
 			terminalThemeOption.dispatchEvent(new Event("change"));
+		    }
+
+		    if ("autosave" in data) {
+			setAutosave(data.autosave);
 		    }
 		} else {
 		    console.log("No display name stored for " + user.uid);

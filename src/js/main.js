@@ -10,11 +10,13 @@ import { initTerminalDOM } from "/src/js/terminalDOM.js";
 import { initMatPlotLibAttacher } from "/src/js/matPlotLibAttacher.js"; // TODO: FIX (broken from webWorker)
 import { initWorkerDOM } from "/src/js/workerDOM.js";
 import { initTerminalUI } from "/src/js/terminalUI.js";
-import { gatherAndRunEditorCode } from "/src/js/runner.js";
 import { initAccountUI } from "/src/js/accountUI.js";
 import { initSaveUI } from "/src/js/saving.js";
 import { initLoad } from "/src/js/loading.js";
 
+import { gatherAndRunEditorCode } from "/src/js/runner.js";
+
+    
 initEditor();
 initThemeUpdates();
 initCollapsingUI();

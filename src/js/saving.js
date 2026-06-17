@@ -6,7 +6,8 @@ import { getProjectName, setProjectName, getProjectId,
 	 makeClean, makeDirty, isDirty } from "/src/js/currentProject.js";
 import { isInvalidDocumentName } from "/src/js/firebaseHelpers.js";
 import { errorShake } from "/src/js/DOMhelpers.js";
-import { makeSafe } from "/src/js/jsUtils.js";
+import { makeSafe, debounce } from "/src/js/jsUtils.js";
+import { getAutosave, toggleAutosave } from "/src/js/autosaveState.js";
 
 import { doc, collection, addDoc, setDoc, getDoc, runTransaction, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
@@ -142,7 +143,8 @@ async function nameAndSave() {
     namingForm.addEventListener('submit', saveSubmitHandler);
     
     namingForm.reset();
-    
+
+    const curProjName = getProjectName();
     // if there is an existing project name, we are "remixing" a project, so we
     //   autopopulate the name but let them edit it
     if (curProjName) {
@@ -188,8 +190,24 @@ async function save() {
     return nameAndSave();
 } // save
 
-async function autosaveInit() {
-    // TODO: implement
+// this takes the editor just because it is convenient, it could easily be adjusted to getEditor itself
+async function autosaveInit(editor) {
+    let unsavedChanges = 0;
+
+    // after changing the editor and letting it rest for 3 seconds, count up
+    // once we've gotten 10 unsaved changes, request a save
+    editor.on("change", debounce(() => {
+	unsavedChanges++;
+	console.log(unsavedChanges);
+	if (unsavedChanges >= 3) {
+	    if (getAutosave()) {
+		save();
+	    }
+	    unsavedChanges = 0;
+	}
+    }, 3000))
+    
+    // TODO: end of class autosaving?
 }
 
 export function initSaveUI() {
@@ -205,5 +223,17 @@ export function initSaveUI() {
     
     document.getElementById('save').addEventListener("click", save);
 
-    autosaveInit();
+    const autosaveEl = document.getElementById('autosave');
+    autosaveEl.addEventListener("click", () => {
+	toggleAutosave();
+	if (auth.currentUser) {
+	    setDoc(doc(db, "users", auth.currentUser.uid), {
+		autosave: getAutosave()
+	    }, { merge: true }).catch(error => {
+		console.error("Error writing to autosave: ", error);
+	    })
+	}
+    });
+
+    autosaveInit(editor);
 }
