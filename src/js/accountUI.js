@@ -6,9 +6,11 @@ import { setEditor } from "/src/js/codeMirror.js";
 import { loadFromUIDs } from "/src/js/loading.js";
 import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
 import { debouncedObjFactory, makeSafe } from "/src/js/jsUtils.js";
-import { setProjectName, setProjectId, setOwns, getProjectId } from "/src/js/currentProject.js";
-import { errorShake } from "/src/js/DOMhelpers.js";
+import { setProjectName, setProjectId, setOwns,
+	 getProjectId, isDirty } from "/src/js/currentProject.js";
+import { errorShake, confirmDialog } from "/src/js/DOMhelpers.js";
 import { setAutosave } from "/src/js/autosaveState.js";
+import { buildTemporallySortedProjects, insertProjects } from "/src/js/profileMenuUtils.js";
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 import { doc, collection, setDoc, getDoc, getDocs, serverTimestamp, runTransaction } from
@@ -115,60 +117,13 @@ function validatePasswordUI() {
     }
 }
 
-// returns an array of objects.
-//   Length of array will equal number of projects in colSnap
-//   Each object will have 'time', 'name', and 'id'
-//   The array will be sorted by the 'time' attributes of the elements
-function buildTemporallySortedProjects(colSnap) {
-    let tsps = [];
-    colSnap.forEach((d) => {
-	const data = d.data();
-	let val = {
-	    time: data.updatedAt,
-	    name: data.displayName,
-	    id: data.projectId
-	}
-	
-	// insertion sort
-	let i = 0;
-	while (i < tsps.length && tsps[i].time < val.time) {
-	    i++;
-	}
-	tsps.splice(i, 0, val);
-    })
-    return tsps;
-}
-
-// takes the output of buildTemporallySortedProjects and
-//   inserts them into the DOM in profileList
-function insertProjects(projs) {
-    const frag = document.createDocumentFragment();
-    
-    projs.forEach((p) => {
-	const li = document.createElement('li');
-	const span = document.createElement('span');
-	span.textContent = p.name;
-
-	li.classList.add('userProject');
-
-	// prepend to reverse order
-	frag.prepend(li);
-	li.appendChild(span);
-	li.addEventListener("click", () => {
-	    loadFromUIDs(auth.currentUser.uid, p.id);
-	})
-    })
-
-    const profileList = document.getElementById("profileList");
-    profileList.insertBefore(frag, document.getElementById("signOut"));
-}
-
 export function initAccountUI() {
     const loginDialog = document.getElementById("login-dialog");
     const signupDialog = document.getElementById("signup-dialog");
     loginDialog.addEventListener("toggle", toggleDBGopen);
     signupDialog.addEventListener("toggle", toggleDBGopen);
     document.getElementById("generic-error-dialog").addEventListener("toggle", toggleDBGopen);
+    document.getElementById("generic-confirmation-dialog").addEventListener("toggle", toggleDBGopen);
 
     document.getElementById("login-to-signup").addEventListener("click", () => {
 	signupDialog.showPopover();
@@ -180,8 +135,13 @@ export function initAccountUI() {
 	signupDialog.hidePopover();
     })
 
-    document.getElementById("newProject").addEventListener("click", () => {
-	// TODO: Complain if project is dirty
+    document.getElementById("newProject").addEventListener("click", async () => {
+	if (isDirty()) {
+	    const conf = await confirmDialog("You have unsaved changes, do you really want to make a new project?");
+	    if (!conf) {
+		return;
+	    }
+	}
 	setEditor("");
 	setProjectName(null);
 	setProjectId(null);
@@ -230,7 +190,6 @@ export function initAccountUI() {
 
 	    // add all user projects to dropdown menu allowing them to load projects
 	    getDocs(collection(db, 'users', user.uid, 'projectNames')).then((colSnapshot) => {
-		// TODO: handle 0 projects intelligently
 		if (colSnapshot.length === 0) {
 		    return
 		}
@@ -447,8 +406,8 @@ export function initAccountUI() {
 
 	    logoutUI();
 	}).catch((error) => {
-	    // TODO: handle errors
 	    console.error("Error logging out", error.code, error.message);
+	    logErrors("Error logging out with code: " + error.code, error.message);
 	})
     })
 }

@@ -4,6 +4,7 @@ import { logErrors } from "/src/js/firebaseHelpers.js";
 import { setProjectName, setProjectId, setOwns,
          getProjectName, getProjectId, makeClean } from "/src/js/currentProject.js";
 import { makeSafe } from "/src/js/jsUtils.js";
+import { genericError } from "/src/js/DOMhelpers.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 // WARNING: This will overwrite the current contents of the editor. It should
@@ -101,15 +102,12 @@ export async function loadFromURL() {
 	const foundProject = loadFromNames(parts[0], parts[1]);
 	// if we can't load it, give an error
 	if (!foundProject) {
-	    const dialog = document.getElementById('generic-error-dialog');
-	    const textDiv = document.getElementById('generic-error-text');
-	    textDiv.textContent = "Couldn\'t find project '" + parts[1] +
-		"' from user '" + parts[0] + "'";
+	    genericError("Couldn\'t find project '" + parts[1] +
+			 "' from user '" + parts[0] + "'");
 	    // if we fail to load, empty the project portion of the URL
 	    //   (if the user mis-typed, their previous attempt can be accessed/edited with
 	    //    the back button, which won't re-try to load immediately)
 	    history.pushState({}, "", "/");
-	    dialog.showPopover();
 	    return false;
 	}
 	return true;

@@ -4,10 +4,11 @@ import { toggleDBGopen } from "/src/js/modalBackground.js";
 import { getProjectName, setProjectName, getProjectId,
 	 setProjectId, getOwns, setOwns,
 	 makeClean, makeDirty, isDirty } from "/src/js/currentProject.js";
-import { isInvalidDocumentName } from "/src/js/firebaseHelpers.js";
-import { errorShake } from "/src/js/DOMhelpers.js";
+import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
+import { errorShake, genericError } from "/src/js/DOMhelpers.js";
 import { makeSafe, debounce } from "/src/js/jsUtils.js";
 import { getAutosave, toggleAutosave } from "/src/js/autosaveState.js";
+import { insertProject } from "/src/js/profileMenuUtils.js";
 
 import { doc, collection, addDoc, setDoc, getDoc, runTransaction, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
@@ -71,9 +72,15 @@ function updateProject(uid, projId, projName, code) {
     }, { merge: true })
 }
 
-async function nameAndSave() {
+async function nameAndSave(code) {
     const namingDialog = document.getElementById("project-naming-dialog");
     const namingForm = document.getElementById("project-naming-form");
+
+    const user = auth.currentUser;
+    if (!user) {
+	genericError("Please log in before saving your project");
+	return
+    }
     
     // open dialog
     // attach callback to submit (wait for verification that it worked, then close)
@@ -84,10 +91,11 @@ async function nameAndSave() {
 	
 	let formData = new FormData(namingForm);
 
-	let projectName = formData.get("project_name");
+	let projectName = formData.get("project-name");
 	let safeProjectName = makeSafe(projectName);
 	
 	try {
+	    console.log(user.uid, projectName, safeProjectName);
 	    const retVal = await createNewProject(user.uid, projectName, safeProjectName, code);
 	    
 	    // if saved successfully
@@ -108,7 +116,7 @@ async function nameAndSave() {
 				   projectId: retVal.projectId,
 				   uid: user.uid }, "", newURL);
 		
-		// TODO: Add new project to profile list
+		insertProject(projectName, retVal.projectId);
 		
 		namingDialog.hidePopover();
 	    } else {
@@ -128,7 +136,8 @@ async function nameAndSave() {
 		}
 	    }
 	} catch (e) {
-	    alert("We shouldn't have gotten here!" + e);
+	    logErrors("Caught error on saving, shouldn't be possible", e.message);
+	    genericError("Unknown error when saving");
 	}
     }
     
@@ -161,10 +170,7 @@ async function save() {
     const user = auth.currentUser;
     
     if (!user) {
-	const dialog = document.getElementById('generic-error-dialog');
-	const textDiv = document.getElementById('generic-error-text');
-	textDiv.textContent = "Please log in before saving your project";
-	dialog.showPopover();
+	genericError("Please log in before saving your project");
 	return
     }
     
@@ -187,7 +193,7 @@ async function save() {
     }
     
     // we have a new project for this user, ask them to submit a name
-    return nameAndSave();
+    return nameAndSave(code);
 } // save
 
 // this takes the editor just because it is convenient, it could easily be adjusted to getEditor itself
@@ -236,4 +242,13 @@ export function initSaveUI() {
     });
 
     autosaveInit(editor);
+
+    window.addEventListener("beforeunload", (event) => {
+	if (!isDirty()) {
+	    return;
+	}
+
+	event.preventDefault();
+	event.returnValue = '';
+    })
 }
