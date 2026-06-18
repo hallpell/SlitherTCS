@@ -11,10 +11,12 @@ export function setAutosave(bool) {
     const el = document.getElementById("autosave");
     if (autosave) {
 	el.textContent = "Autosave On";
-	el.style.backgroundColor = "green";
+	el.classList.add('autosave-enabled');
+	el.classList.remove('autosave-disabled');
     } else {
 	el.textContent = "Autosave Off";
-	el.style.backgroundColor = "orange";
+	el.classList.add('autosave-disabled');
+	el.classList.remove('autosave-enabled');
     }
 }
 

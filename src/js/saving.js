@@ -232,6 +232,7 @@ export function initSaveUI() {
     const autosaveEl = document.getElementById('autosave');
     autosaveEl.addEventListener("click", () => {
 	toggleAutosave();
+	// if we are logged in, save this setting
 	if (auth.currentUser) {
 	    setDoc(doc(db, "users", auth.currentUser.uid), {
 		autosave: getAutosave()

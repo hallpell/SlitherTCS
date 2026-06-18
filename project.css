@@ -6,6 +6,9 @@ body {
 dialog {
     width: 40%;
     padding: 0px;
+    border: #0000;
+    border-radius: 10px;
+    font-family: 'Segoe UI';
 }
 
 h3 {
@@ -13,12 +16,31 @@ h3 {
 }
 
 .popover-hint {
-    margin-bottom: 4px;
-    background-color: #264649;
-    color: white;
+    margin-bottom: 6px;
     position: absolute;
     position-area: top;
     border: none;
+    overflow: visible;
+    background-color: transparent;
+}
+
+.popover-hint-text {
+    background-color: #264649;
+    color: white;
+    border-radius: 6px;
+    font-size: 14px;
+    padding: 4px;
+}
+
+.popover-hint-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    bottom: -5px;
+    left: calc( 50% - 7px);
+    border-top: 7px solid #264649;
+    border-right: 7px solid transparent;
+    border-left: 7px solid transparent;
 }
 
 #login-body, #signup-body {
@@ -152,13 +174,31 @@ h3 {
     flex-flow: row nowrap;
     justify-content: space-between;
     align-items: center;
-    background-color: #5F48B5;
+    background-color: #337AB7;
     padding-left: 8px;
     padding-right: 8px;
 }
 
+.autosave-enabled, .save-clean {
+    background-color: #3C983C;
+}
+
+.autosave-disabled {
+    background-color: #E08D2E;
+}
+
+.save-dirty {
+    background-color: #EF4444;
+}
+
 button {
     margin: 2px;
+    cursor: pointer;
+    border: #0000;
+    border-radius: 4px;
+    padding: .3em .6em;
+    background-color: #5F48B5;
+    color: white;
 }
 
 #mainContainer {

@@ -11,14 +11,18 @@ export function isDirty() {
     return dirty;
 }
 
+const saveEl = document.getElementById("save");
+
 export function makeDirty() {
     dirty = true;
-    document.getElementById("save").style.backgroundColor = 'red';
+    saveEl.classList.add('save-dirty');
+    saveEl.classList.remove('save-clean');
 }
 
 export function makeClean() {
     dirty = false;
-    document.getElementById("save").style.backgroundColor = 'green';
+    saveEl.classList.add('save-clean');
+    saveEl.classList.remove('save-dirty');
 }
 
 export function getProjectName() {
