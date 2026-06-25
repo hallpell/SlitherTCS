@@ -5,12 +5,40 @@ import { runTerminalCode } from "/src/js/runner.js";
 export async function initTerminalUI() {
     const ourInput = document.getElementById("repl-input");
     const output = document.getElementById("output");
+    const terminal = document.getElementById("terminal");
 
-    document.getElementById("terminal").addEventListener("click", (e) => {
+
+    // for focus reasons
+    let isDragging = false;
+    let startCoords = null;
+
+    terminal.addEventListener("mousedown", (e) => {
+	isDragging = false;
+	startCoords = {x: e.screenX, y: e.screenY};
+    });
+
+    terminal.addEventListener("mousemove", (e) => {
+	isDragging = true;
+    });
+    
+    terminal.addEventListener("click", (e) => {
 	// don't focus if we click on the bar
 	if (document.getElementById("terminalBar").contains(e.target)) {
 	    return;
 	}
+
+	// don't focus if the user has selected (highlighted) something
+	const selection = window.getSelection();
+	if (selection && !selection.isCollapsed) {
+	    return
+	}
+
+	// don't focus if the mouse moved more than 5 px as part of this click
+	if (isDragging &&
+	    ((e.screenX - startCoords.x)**2 + (e.screenY - startCoords.y)**2) >= 25) {
+	    return;
+	}
+	
 	ourInput.focus();
     })
     
@@ -23,6 +51,7 @@ export async function initTerminalUI() {
 	    if (getRunningStatus() == 'ready' || getRunningStatus() == 'awaitingIncomplete') {
 		const code = ourInput.value;
 		output.appendText(code);
+		output.addText("");
 		
 		history.push(code);
 		historyIndex = history.length;
@@ -32,6 +61,7 @@ export async function initTerminalUI() {
 	    } else if (getRunningStatus() == 'awaitingInput') {
 		const response = ourInput.value;
 		output.appendInput(response);
+		output.addText("");
 		
 		ourInput.value = "";
 		worker.postMessage({ type: "input-response", value: response });
