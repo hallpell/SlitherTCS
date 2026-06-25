@@ -1,7 +1,18 @@
 from code import InteractiveConsole
+import sys
+
+class myConsole(InteractiveConsole):
+    def showtraceback(self):
+        typ, value, tb = sys.exc_info()
+
+        if typ is KeyboardInterrupt:
+            print("KeyboardInterrupt", file=sys.stderr)
+            return
+
+        super().showtraceback()
 
 env = {}
-console = InteractiveConsole(locals = env)
+console = myConsole(locals = env)
 
 # this returns True if the code ran (including if it threw an error)
 #   and returns False if it requires more input to be valid Python code
@@ -22,4 +33,8 @@ def exec_file(inputCode):
 def refresh():
     global console, env
     env = {}
-    console = InteractiveConsole(locals=env)
+    console = myConsole(locals=env)
+
+def abandon():
+    global console
+    console.resetbuffer()

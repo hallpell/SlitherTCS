@@ -22,8 +22,23 @@ export function setRunningStatus(val) {
 const interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
 
 export function sendInterrupt() {
-    // TODO: only send if we're running code (if you interrupt while nothing is running, you
-    //   get a weird error the next time you try to run things)
+    console.log("Sending Interrupt");
+    if (runningStatus == "ready") {
+	// if no code is running, we don't need to do anything
+	return
+    } else if (runningStatus == "awaitingIncomplete") {
+	// capture current user input as "output"
+	document.getElementById("output").flush();
+
+	// tell the worker to abandon current statement
+	worker.postMessage({ type: "abandon" });
+	return
+    } else if (runningStatus == "awaitingInput") {
+	worker.postMessage({ type: "input-response", cancelled: true });
+	return;
+    }
+
+    // if we're not in a special case, send signal to kill current process
     Atomics.store(interruptBuffer, 0, 2); // 2 = SIGINT-like signal
     Atomics.notify(interruptBuffer, 0);
 }

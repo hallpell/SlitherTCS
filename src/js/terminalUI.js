@@ -20,7 +20,7 @@ export async function initTerminalUI() {
     
     ourInput.addEventListener("keydown", async (e) => {
 	if (e.key === "Enter") {
-	    if (getRunningStatus() == 'ready') {
+	    if (getRunningStatus() == 'ready' || getRunningStatus() == 'awaitingIncomplete') {
 		const code = ourInput.value;
 		output.appendText(code);
 		
@@ -34,15 +34,14 @@ export async function initTerminalUI() {
 		output.appendInput(response);
 		
 		ourInput.value = "";
-		worker.postMessage({type: "input-response", value: response});
+		worker.postMessage({ type: "input-response", value: response });
 
 		// WARNING: this was changed from 'ready' to 'busy' without testing
 		//   (I think we're handing execution back to the worker, but worried)
 		setRunningStatus('busy');
-	    } else if (getRunningStatus() == 'awaitingIncomplete') {
-		// not actually using this, delete?
 	    } else {
-		// pass, terminal status is busy. Think about what UI response should happen
+		// pass, terminal status is busy.
+		// TODO: Think about good UI to indicate nothing is happening
 	    }
 	}
 	
@@ -65,8 +64,9 @@ export async function initTerminalUI() {
 	}
 	
 	if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
+	    // TODO: maybe don't prevent default? Allow Ctrl+C to copy from terminal
+	    //         as well as sending interrupt?
 	    e.preventDefault();
-	    console.log("Saw Ctrl+C");
 	    sendInterrupt();
 	}
     });

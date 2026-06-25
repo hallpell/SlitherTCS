@@ -1,6 +1,6 @@
 export function initTerminalDOM() {
     const output = document.getElementById("output");
-    let ourInput = document.getElementById("repl-input");
+    const ourInput = document.getElementById("repl-input");
     
     output.generalAdd = (content, newClass=undefined, newLine=false) => {
 	let wasFocused = ourInput.contains(document.activeElement);
@@ -42,6 +42,11 @@ export function initTerminalDOM() {
     
     output.printPrompt = () => {
 	output.addText(">>> ");
+    }
+
+    output.flush = () => {
+	output.appendText(ourInput.value);
+	ourInput.value = '';
     }
 
     output.printPrompt();

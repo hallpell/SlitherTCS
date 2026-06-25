@@ -13,6 +13,7 @@ import { initTerminalUI } from "/src/js/terminalUI.js";
 import { initAccountUI } from "/src/js/accountUI.js";
 import { initSaveUI } from "/src/js/saving.js";
 import { initLoad } from "/src/js/loading.js";
+import { initRunningStatus } from "/src/js/runningStatus.js";
 
 import { gatherAndRunEditorCode } from "/src/js/runner.js";
 
@@ -27,6 +28,7 @@ initTerminalUI();
 initAccountUI();
 initSaveUI();
 initLoad();
+initRunningStatus();
 
 document.getElementById("runCode").addEventListener("click", gatherAndRunEditorCode);
 

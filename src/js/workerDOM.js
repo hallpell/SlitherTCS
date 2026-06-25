@@ -34,12 +34,16 @@ export function initWorkerDOM() {
 	    // most errors will have a trace through 2 Pyodide files that won't be relevant to
 	    //   the user so we jump to part of the error message that involves the user's code
 	    console.log(message);
-	    let userError = message.indexOf('File "<string>"');
-	    let errorMessage = message
-	    if (userError != -1) {
-		errorMessage = message.substring(userError);
+	    if (message.substring(message.length-18, message.length-1) == "KeyboardInterrupt") {
+		output.addError("KeyboardInterrupt");
+	    } else {
+		let userError = message.indexOf('File "<string>"');
+		let errorMessage = message
+		if (userError != -1) {
+		    errorMessage = message.substring(userError);
+		}
+		output.addError(errorMessage);
 	    }
-	    output.addError(errorMessage);
 	    break;
 	    
 	case "result":
@@ -53,7 +57,10 @@ export function initWorkerDOM() {
 	    break;
 	    
 	case "status":
-	    if (message === "done" || message === "error") {
+	    if (message === "done" || message === "error" || message === "abandoned") {
+		if (message === "abandoned") {
+		    output.addError("KeyboardInterrupt");
+		}
 		output.printPrompt();
 		setRunningStatus('ready');
 	    }
@@ -61,9 +68,8 @@ export function initWorkerDOM() {
 	    break;
 	    
 	case "incomplete":
-	    console.log("Incomplete line detected");
 	    output.addText("... ");
-	    setRunningStatus('ready');
+	    setRunningStatus('awaitingIncomplete');
 	    break;
 	    
 	case "turtle_graphics":

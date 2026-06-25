@@ -48,23 +48,26 @@ async function init() {
 	write: writeFactory("stderr")
     });
 
-    // this batched version wasn't flushing properly, so was moved to the above write implementation
+    // this batched version wasn't flushing properly,
+    //   so was moved to the above write implementation
     /*
     pyodide.setStdout({
 	batched: (text) => {
 	    self.postMessage({ type: "stdout", message: text });
 	}
     });
-    
+
     pyodide.setStderr({
 	batched: (text) => {
 	    self.postMessage({ type: "stderr", message: text });
 	}
-    });*/
+    });
+    */
+
 
     // refactor these imports into a wheel once stable
     console.log("Hacky python import"); 
-    const response = await fetch("../python/runner.py");
+    const response = await fetch("/src/python/runner.py");
     const code = await response.text();
 
     pyodide.FS.writeFile("runner.py", code);
@@ -80,7 +83,13 @@ def input(prompt=""):
     fut = loop.create_future()
     js._pending_input = fut
     js.requestInput(prompt)
-    return loop.run_until_complete(fut)
+
+    try:
+        return loop.run_until_complete(fut)
+    except asyncio.CancelledError:
+        raise KeyboardInterrupt()
+    finally:
+        js._pending_input = None
 
 builtins.input = input`)
 
@@ -129,11 +138,21 @@ self.onmessage = async (event) => {
 	self.postMessage({ type: "status", message: "refreshed" });
     }
 
+    if (event.data.type == "abandon") {
+	await pyodide.runPythonAsync(`runner.abandon()`);
+
+	self.postMessage({ type: "status", message: "abandoned" });
+    }
+
     if (event.data.type == "input-response") {
-	console.log("Recieved", event.data.value);
-	const resolve = self._pending_input.toJs();
-	if (resolve) {
-	    resolve.set_result(event.data.value);
+	if (Object.hasOwn(event.data, 'cancelled')) {
+	    self._pending_input.cancel()
+	} else {
+	    console.log("Recieved", event.data.value);
+	    const resolve = self._pending_input.toJs();
+	    if (resolve) {
+		resolve.set_result(event.data.value);
+	    }
 	}
     }
     
@@ -186,6 +205,7 @@ turtle._CFG['canvheight'] = ${graphicsHeight}`);
 		self.postMessage({ type: "incomplete" });
 	    }
 	} catch (err) {
+	    // this catchs JS errors with Pyodide - not internal Python errors
 	    self.postMessage({ type: "stderr", message: err.message });
 	    self.postMessage({ type: "status", message: "error" });
 	}
