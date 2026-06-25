@@ -201,6 +201,11 @@ button {
     color: white;
 }
 
+.running-disabled {
+    cursor: not-allowed;
+    background-color: #7F6895;
+}
+
 #mainContainer {
     display: flex;
     justify-content: space-around;

@@ -204,8 +204,7 @@ async function autosaveInit(editor) {
     // once we've gotten 10 unsaved changes, request a save
     editor.on("change", debounce(() => {
 	unsavedChanges++;
-	console.log(unsavedChanges);
-	if (unsavedChanges >= 3) {
+	if (unsavedChanges >= 10) {
 	    if (getAutosave()) {
 		save();
 	    }

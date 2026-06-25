@@ -1,5 +1,5 @@
 import { worker } from "/src/js/workerClient.js";
-import { setTerminalStatus } from "/src/js/main.js";
+import { setRunningStatus } from "/src/js/runningStatus.js";
 
 // code to jam turtle graphics into the graphics box
 const elementFromProps = (map) => {
@@ -55,7 +55,7 @@ export function initWorkerDOM() {
 	case "status":
 	    if (message === "done" || message === "error") {
 		output.printPrompt();
-		setTerminalStatus('ready');
+		setRunningStatus('ready');
 	    }
 	    console.log("Status:", message);
 	    break;
@@ -63,7 +63,7 @@ export function initWorkerDOM() {
 	case "incomplete":
 	    console.log("Incomplete line detected");
 	    output.addText("... ");
-	    setTerminalStatus('ready');
+	    setRunningStatus('ready');
 	    break;
 	    
 	case "turtle_graphics":
@@ -77,7 +77,7 @@ export function initWorkerDOM() {
 	case "stdin_request":
 	    console.log("stdin_request detected")
 	    output.addText(message);
-	    setTerminalStatus('awaitingInput');
+	    setRunningStatus('awaitingInput');
 	    // force the focus on input (which will also make the cursor blink)
 	    ourInput.focus();
 	    break;

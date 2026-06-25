@@ -1,9 +1,10 @@
+import { getRunningStatus, setRunningStatus, sendInterrupt } from "/src/js/runningStatus.js";
+import { worker } from "/src/js/workerClient.js";
+import { runTerminalCode } from "/src/js/runner.js";
+
 export async function initTerminalUI() {
     const ourInput = document.getElementById("repl-input");
     const output = document.getElementById("output");
-    const main = await import("/src/js/main.js");
-    const workerModule =  await import("/src/js/workerClient.js");
-    const runnerModule =  await import("/src/js/runner.js");
 
     document.getElementById("terminal").addEventListener("click", (e) => {
 	// don't focus if we click on the bar
@@ -19,7 +20,7 @@ export async function initTerminalUI() {
     
     ourInput.addEventListener("keydown", async (e) => {
 	if (e.key === "Enter") {
-	    if (main.terminalStatus == 'ready') {
+	    if (getRunningStatus() == 'ready') {
 		const code = ourInput.value;
 		output.appendText(code);
 		
@@ -27,16 +28,18 @@ export async function initTerminalUI() {
 		historyIndex = history.length;
 		
 		ourInput.value = "";
-		await runnerModule.runTerminalCode(code);
-	    } else if (main.terminalStatus == 'awaitingInput') {
+		await runTerminalCode(code);
+	    } else if (getRunningStatus() == 'awaitingInput') {
 		const response = ourInput.value;
 		output.appendInput(response);
 		
 		ourInput.value = "";
-		workerModule.worker.postMessage({type: "input-response", value: response});
-		
-		main.setTerminalStatus('ready');
-	    } else if (main.terminalStatus == 'awaitingIncomplete') {
+		worker.postMessage({type: "input-response", value: response});
+
+		// WARNING: this was changed from 'ready' to 'busy' without testing
+		//   (I think we're handing execution back to the worker, but worried)
+		setRunningStatus('busy');
+	    } else if (getRunningStatus() == 'awaitingIncomplete') {
 		// not actually using this, delete?
 	    } else {
 		// pass, terminal status is busy. Think about what UI response should happen
@@ -64,7 +67,7 @@ export async function initTerminalUI() {
 	if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
 	    e.preventDefault();
 	    console.log("Saw Ctrl+C");
-	    main.sendInterrupt();
+	    sendInterrupt();
 	}
     });
 }

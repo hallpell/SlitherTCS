@@ -1,11 +1,11 @@
 import { worker } from "/src/js/workerClient.js"
-import { setTerminalStatus } from "/src/js/main.js"
+import { setRunningStatus } from "/src/js/runningStatus.js"
 import { getEditor } from "/src/js/codeMirror.js"
 
 export async function runEditorCode(code){
     console.log("Starting to run editor code", code);
     
-    setTerminalStatus('busy');
+    setRunningStatus('busy');
 	
     // send a message to reset the interactive console
     worker.postMessage({
@@ -23,7 +23,7 @@ export async function runEditorCode(code){
 export async function runTerminalCode(code){
     console.log("Starting to run terminal code", code)
     
-    setTerminalStatus('busy');
+    setRunningStatus('busy');
     
     worker.postMessage({
 	type: "run",
