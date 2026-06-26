@@ -322,10 +322,15 @@ button {
     width: 30%;
 }
 
-.userInput {
+.terminal-prompt {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.user-input {
     color: blue;
 }
 
-.outputError {
+.output-error {
     color: red;
 }

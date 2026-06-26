@@ -52,9 +52,12 @@ export async function initTerminalUI() {
 		const code = ourInput.value;
 		output.appendText(code);
 		output.addText("");
-		
-		history.push(code);
-		historyIndex = history.length;
+
+		if (code.trim().length > 0) {
+		    history.push(code);
+		    historyIndex = history.length;
+		}
+		buffer = "";
 		
 		ourInput.value = "";
 		await runTerminalCode(code);
@@ -66,8 +69,6 @@ export async function initTerminalUI() {
 		ourInput.value = "";
 		worker.postMessage({ type: "input-response", value: response });
 
-		// WARNING: this was changed from 'ready' to 'busy' without testing
-		//   (I think we're handing execution back to the worker, but worried)
 		setRunningStatus('busy');
 	    } else {
 		// pass, terminal status is busy.
@@ -77,8 +78,17 @@ export async function initTerminalUI() {
 	
 	if (e.key === "ArrowUp") {
 	    if (historyIndex > 0) {
+		// if we're at the end of history and the user has entered things,
+		//   store it in our buffer
+		if (historyIndex == history.length && ourInput.value.trim().length > 0) {
+		    buffer = ourInput.value;
+		    console.log(buffer);
+		}
 		historyIndex--;
 		ourInput.value = history[historyIndex];
+		// set cursor to the end of the line
+		const l = ourInput.value.length;
+		ourInput.setSelectionRange(l,l);
 	    }
 	    e.preventDefault();
 	}
@@ -88,15 +98,20 @@ export async function initTerminalUI() {
 		historyIndex++;
 		ourInput.value = history[historyIndex];
 	    } else {
-		ourInput.value = "";
+		historyIndex = history.length;
+		ourInput.value = buffer;
+		buffer = "";
 	    }
+	    // set cursor to the end of the line
+	    const l = ourInput.value.length;
+	    ourInput.setSelectionRange(l,l);
 	    e.preventDefault();
 	}
 	
 	if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
 	    // TODO: maybe don't prevent default? Allow Ctrl+C to copy from terminal
 	    //         as well as sending interrupt?
-	    e.preventDefault();
+	    //e.preventDefault();
 	    sendInterrupt();
 	}
     });

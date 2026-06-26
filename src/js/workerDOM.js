@@ -68,7 +68,7 @@ export function initWorkerDOM() {
 	    break;
 	    
 	case "incomplete":
-	    output.addText("... ");
+	    output.printIncomplete();
 	    setRunningStatus('awaitingIncomplete');
 	    break;
 	    
