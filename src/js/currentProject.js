@@ -5,6 +5,7 @@
 let curProjectName = null;
 let curProjectId = null;
 let projOwner = false;
+let ownerId = null;
 let dirty = false;
 
 export function isDirty() {
@@ -41,6 +42,14 @@ export function getProjectId() {
     }
 }
 
+export function getOwnerId() {
+    return ownerId;
+}
+
+export function getOwns() {
+    return projOwner;
+}
+
 export function setProjectName(val) {
     curProjectName = val;
 }
@@ -49,8 +58,8 @@ export function setProjectId(val) {
     curProjectId = val;
 }
 
-export function getOwns() {
-    return projOwner;
+export function setOwnerId(val) {
+    ownerId = val;
 }
 
 export function setOwns(val) {

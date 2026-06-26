@@ -2,7 +2,7 @@ import { getEditor } from "/src/js/codeMirror.js";
 import { db, auth } from "/src/js/firebase.js";
 import { toggleDBGopen } from "/src/js/modalBackground.js";
 import { getProjectName, setProjectName, getProjectId,
-	 setProjectId, getOwns, setOwns,
+	 setProjectId, getOwns, setOwns, setOwnerId,
 	 makeClean, makeDirty, isDirty } from "/src/js/currentProject.js";
 import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
 import { errorShake, genericError } from "/src/js/DOMhelpers.js";
@@ -95,14 +95,17 @@ async function nameAndSave(code) {
 	let safeProjectName = makeSafe(projectName);
 	
 	try {
-	    console.log(user.uid, projectName, safeProjectName);
-	    const retVal = await createNewProject(user.uid, projectName, safeProjectName, code);
+	    const retVal = await createNewProject(user.uid,
+						  projectName,
+						  safeProjectName,
+						  code);
 	    
 	    // if saved successfully
 	    if (retVal.status) {
 		setProjectName(safeProjectName);
 		setProjectId(retVal.projectId);
 		setOwns(true);
+		setOwnerId(user.uid);
 		makeClean();
 		
 		const userSnap = await getDoc(doc(db, "users", user.uid));
@@ -183,7 +186,7 @@ async function save() {
     //   we'd then want to save a new project in the user's name
     if (projId && curProjName && getOwns()) {
 	try {
-	    updateProject(user.uid, projId, curProjName, code);
+	    await updateProject(user.uid, projId, curProjName, code);
 	    makeClean();
 	} catch (error) {
 	    console.log("Error when saving/overwriting existing project");
@@ -196,7 +199,8 @@ async function save() {
     return nameAndSave(code);
 } // save
 
-// this takes the editor just because it is convenient, it could easily be adjusted to getEditor itself
+// this takes the editor just because it is convenient,
+//   it could easily be adjusted to getEditor itself
 async function autosaveInit(editor) {
     let unsavedChanges = 0;
 

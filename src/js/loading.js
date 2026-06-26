@@ -1,7 +1,7 @@
 import { setEditor } from "/src/js/codeMirror.js";
 import { db, auth } from "/src/js/firebase.js";
 import { logErrors } from "/src/js/firebaseHelpers.js";
-import { setProjectName, setProjectId, setOwns,
+import { setProjectName, setProjectId, setOwns, setOwnerId,
          getProjectName, getProjectId, makeClean } from "/src/js/currentProject.js";
 import { makeSafe } from "/src/js/jsUtils.js";
 import { genericError } from "/src/js/DOMhelpers.js";
@@ -22,6 +22,7 @@ export function loadFromUIDs(userId, projectId, updateState=true, pushState=true
 	    setProjectId(projectId);
 	    const isOwner = auth.currentUser && userId == auth.currentUser.uid;
 	    setOwns(isOwner);
+	    setOwnerId(userId);
 	    makeClean();
 	    
 	    if (updateState) {
@@ -126,15 +127,10 @@ export async function initLoad() {
 	if (Object.hasOwn(event.state, "safeProjectName") &&
 	    Object.hasOwn(event.state, "projectId") &&
 	    Object.hasOwn(event.state, "uid")) {
-	    // load proper project, don't mess with history
+	    // load project, don't mess with history
 	    loadFromUIDs(event.state.uid, event.state.projectId, false, false);
 	} else {
 	    loadFromURL();
 	}
     })
 }
-
-/*    const newState = {safeUN: userSnap.data().safeName,
-		      safeProjectName: snap.data().safeName,
-		      projectId: projectId,
-		      uid: userId };*/

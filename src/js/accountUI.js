@@ -7,7 +7,7 @@ import { loadFromUIDs } from "/src/js/loading.js";
 import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
 import { debouncedObjFactory, makeSafe } from "/src/js/jsUtils.js";
 import { setProjectName, setProjectId, setOwns,
-	 getProjectId, isDirty } from "/src/js/currentProject.js";
+	 getProjectId, getOwnerId, isDirty } from "/src/js/currentProject.js";
 import { errorShake, confirmDialog } from "/src/js/DOMhelpers.js";
 import { setAutosave } from "/src/js/autosaveState.js";
 import { buildTemporallySortedProjects, insertProjects } from "/src/js/profileMenuUtils.js";
@@ -146,6 +146,7 @@ export function initAccountUI() {
 	setProjectName(null);
 	setProjectId(null);
 	setOwns(false);
+	setOwnerId(null);
 
 	history.pushState({}, "", "/");
 
@@ -155,6 +156,10 @@ export function initAccountUI() {
     onAuthStateChanged(auth, (user) => {
 	// if user is signing in
 	if (user) {
+	    // check if this newly-logged in user is the owner of current project
+	    if (getOwnerId() == user.uid) {
+		setOwns(true);
+	    }
 	    // check if they have saved theme settings
 	    getDoc(doc(db, 'users', user.uid)).then((snap) => {
 		if (snap.exists()) {
@@ -199,7 +204,8 @@ export function initAccountUI() {
 		console.log("Couldn't read projects to make loading bar");
 		console.error(error);
 	    })
-	} else {
+	} else { // no user is logged in
+	    setOwns(false);
 	    logoutUI();
 	    document.querySelectorAll(".userProject").forEach((el) => {
 		el.remove();
