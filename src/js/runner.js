@@ -1,5 +1,5 @@
 import { worker } from "/src/js/workerClient.js"
-import { setRunningStatus } from "/src/js/runningStatus.js"
+import { getRunningStatus, setRunningStatus } from "/src/js/runningStatus.js"
 import { getEditor } from "/src/js/codeMirror.js"
 
 export async function runEditorCode(code){
@@ -34,9 +34,14 @@ export async function runTerminalCode(code){
 
 // this is for running the code in the editor
 export async function gatherAndRunEditorCode() {
-    document.getElementById("output").addError("Running file, refreshing environment");
-    let code = getEditor().getValue();
-    await runEditorCode(code);
+    if (getRunningStatus() === 'ready') {
+	document.getElementById("output").addError("Running file, refreshing environment");
+	let code = getEditor().getValue();
+	await runEditorCode(code);
+    } else {
+	console.log("Couldn't run, code status is: " + getRunningStatus());
+	// TODO: add errors for edge cases?
+    }
 }
     
 

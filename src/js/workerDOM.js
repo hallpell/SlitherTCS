@@ -33,7 +33,7 @@ export function initWorkerDOM() {
 	case "stderr":
 	    // most errors will have a trace through 2 Pyodide files that won't be relevant to
 	    //   the user so we jump to part of the error message that involves the user's code
-	    console.log(message);
+	    //console.log(message);
 	    if (message.substring(message.length-18, message.length-1) == "KeyboardInterrupt") {
 		output.addError("KeyboardInterrupt");
 	    } else {

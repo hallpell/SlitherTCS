@@ -14,9 +14,6 @@ import { initAccountUI } from "/src/js/accountUI.js";
 import { initSaveUI } from "/src/js/saving.js";
 import { initLoad } from "/src/js/loading.js";
 import { initRunningStatus } from "/src/js/runningStatus.js";
-
-import { gatherAndRunEditorCode } from "/src/js/runner.js";
-
     
 initEditor();
 initThemeUpdates();
@@ -29,8 +26,6 @@ initAccountUI();
 initSaveUI();
 initLoad();
 initRunningStatus();
-
-document.getElementById("runCode").addEventListener("click", gatherAndRunEditorCode);
 
 // this whole computation (as opposed to just clientWidth/clientHeight) is necessary
 //   because clientWidth will round up, which adds scrollbars and breaks the layout

@@ -1,4 +1,6 @@
 import { worker } from "/src/js/workerClient.js";
+import { gatherAndRunEditorCode } from "/src/js/runner.js";
+import { getEditor } from "/src/js/codeMirror.js";
 
 let runningStatus = 'ready';
 
@@ -49,6 +51,13 @@ export function initRunningStatus() {
 
     setRunningStatus("ready");
 
-    // this still fires when it is "inactive" - sendInterrupt should handle that intelligently
+    // these still fire when "inactive" - handlers in charge of checking that intelligently
     document.getElementById("stopCode").addEventListener("click", sendInterrupt);
+    document.getElementById("runCode").addEventListener("click", gatherAndRunEditorCode);
+
+    const editor = getEditor();
+    
+    editor.addKeyMap({
+	"Shift-Enter": gatherAndRunEditorCode,
+    })
 }
