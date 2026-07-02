@@ -43,13 +43,18 @@ h3 {
     border-left: 7px solid transparent;
 }
 
-#login-body, #signup-body {
+#login-body, #signup-body, #password-reset-body {
     margin: 4px;
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
+}
+
+#password-reset-success {
+    margin: 4px;
+    margin-bottom: 20px;
 }
 
 .form-group {
@@ -78,6 +83,10 @@ h3 {
 
 .form-button-group>button {
     width: 30%;
+}
+
+.hidden-div {
+    display: none !important;
 }
 
 .auth-validation, .naming-validation {
@@ -153,10 +162,13 @@ h3 {
     background-color: #ccc;
 }
 
-#signup-to-login, #login-to-signup {
+#signup-to-login, #login-to-signup,
+#login-to-password-reset, #password-reset-to-login {
     cursor: pointer;
     text-decoration: underline;
-    color: #0645ad;
+    color: #444444;
+    font-size: 12px;
+    text-align: center;
 }
 
 .rotate {

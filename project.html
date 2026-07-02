@@ -63,6 +63,9 @@
 	  <div class='form-group form-button-group'>
 	    <a id='login-to-signup'>Don't have an account?</a>
 	  </div>
+	  <div class='form-group form-button-group'>
+	    <a id='login-to-password-reset'>Forgot your password?</a>
+	  </div>
 	</div>
       </form>
     </dialog>
@@ -100,6 +103,39 @@
 	  </div>
 	  <div class='form-group form-button-group'>
 	    <span id='signup-to-login'>Already have an account?</span>
+	  </div>
+	</div>
+      </form>
+    </dialog>
+
+    <dialog popover id='password-reset-dialog' class='modal' popover='auto'>
+      <form id='password-reset-form' novalidate>
+	<div id='password-reset-header'>
+	  <h3>Password Reset</h3>
+	  <hr>
+	</div>
+	<div id='password-reset-body'>
+	  <div class='form-group'>
+	    <span>Username/Email</span>
+	    <input id='password-reset-form-username' type='text' name='username' autocomplete='username' required>
+	    <br><span id='password-reset-validation' class='auth-validation'></span>
+	  </div>
+	  <div class='form-group form-button-group'>
+	    <button type='submit' class='dialog-confirm-button'>Reset Password</button>
+	    <button type='button' class='dialog-cancel-button'
+		    popovertarget='password-reset-dialog'>Cancel</button>
+	  </div>
+	  <div class='form-group form-button-group'>
+	    <span id='password-reset-to-login'>Remember your password? Return to Login</span>
+	  </div>
+	</div>
+	<div id='password-reset-success' class='hidden-div'>
+	  <h5>If there is an account associated with that username/email, we have sent a password reset link to it</h5>
+	  <div class='form-group form-button-group'>
+	    <button type='button' class='dialog-confirm-button'
+		    id='reset-success-to-login'>Login</button>
+	    <button type='button' class='dialog-cancel-button'
+		    popovertarget='password-reset-dialog'>Close</button>
 	  </div>
 	</div>
       </form>

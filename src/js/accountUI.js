@@ -1,4 +1,4 @@
-import { login, signup, logout } from "/src/js/auth.js";
+import { login, signup, logout, passwordReset } from "/src/js/auth.js";
 import { toggleDBGopen } from "/src/js/modalBackground.js";
 import { db, auth } from "/src/js/firebase.js";
 import { logoutUI, setAccountUI } from "/src/js/accountStateUI.js";
@@ -120,8 +120,11 @@ function validatePasswordUI() {
 export function initAccountUI() {
     const loginDialog = document.getElementById("login-dialog");
     const signupDialog = document.getElementById("signup-dialog");
+    const passwordResetDialog = document.getElementById("password-reset-dialog");
+
     loginDialog.addEventListener("toggle", toggleDBGopen);
     signupDialog.addEventListener("toggle", toggleDBGopen);
+    passwordResetDialog.addEventListener("toggle", toggleDBGopen);
     document.getElementById("generic-error-dialog").addEventListener("toggle", toggleDBGopen);
     document.getElementById("generic-confirmation-dialog").addEventListener("toggle", toggleDBGopen);
 
@@ -133,6 +136,23 @@ export function initAccountUI() {
     document.getElementById("signup-to-login").addEventListener("click", () => {
 	loginDialog.showPopover();
 	signupDialog.hidePopover();
+    })
+
+    document.getElementById("login-to-password-reset").addEventListener("click", () => {
+	loginDialog.hidePopover();
+	document.getElementById("password-reset-body").classList.remove("hidden-div");
+	document.getElementById("password-reset-success").classList.add("hidden-div");
+	passwordResetDialog.showPopover();
+    })
+
+    document.getElementById("password-reset-to-login").addEventListener("click", () => {
+	passwordResetDialog.hidePopover();
+	loginDialog.showPopover();
+    })
+
+    document.getElementById("reset-success-to-login").addEventListener("click", () => {
+	passwordResetDialog.hidePopover();
+	loginDialog.showPopover();
     })
 
     document.getElementById("newProject").addEventListener("click", async () => {
@@ -227,19 +247,19 @@ export function initAccountUI() {
 	
 	if (!identifier.includes("@")) {
 	    username = identifier;
-
+	    let snap = null;
 	    try {
-		const snap = await getDoc(doc(db, "usernames", makeSafe(identifier)));
+		snap = await getDoc(doc(db, "usernames", makeSafe(identifier)));
 	    } catch (error) {
 		console.error(error);
 	    }
-	    if (snap.exists()) {
+	    if (snap && snap.exists()) {
 		email = snap.data().email;
 	    } else {
-		const valEl = document.getElementById("login-form-username-validation")
+		const valEl = document.getElementById("login-form-username-validation");
 		valEl.textContent = 'Username not found';
 		errorShake(valEl);
-		return
+		return;
 	    }
 	} else {
 	    email = identifier;
@@ -415,5 +435,53 @@ export function initAccountUI() {
 	    console.error("Error logging out", error.code, error.message);
 	    logErrors("Error logging out with code: " + error.code, error.message);
 	})
+    })
+
+    const passwordResetForm = document.getElementById("password-reset-form");
+    passwordResetForm.addEventListener("submit", async (event) => {
+	event.preventDefault();
+
+	const formData = new FormData(passwordResetForm);
+
+	const identifier = formData.get("username");
+
+	let email;
+	let username = null;
+
+	if (!identifier.includes("@")) {
+	    username = identifier;
+	    let snap = null;
+	    try {
+		snap = await getDoc(doc(db, "usernames", makeSafe(identifier)));
+	    } catch (error) {
+		console.error(error);
+	    }
+	    if (snap && snap.exists()) {
+		email = snap.data().email;
+	    } else {
+		const valEl = document.getElementById("password-reset-validation");
+		valEl.textContent = 'Username not found';
+		errorShake(valEl);
+		return;
+	    }
+	} else {
+	    email = identifier;
+	}
+	    
+	const retVal = await passwordReset(email);
+	if (retVal !== true) {
+	    const valEl = document.getElementById("password-reset-validation");
+	    if (retVal == 'auth/invalid-email') {
+		valEl.textContent = 'Invalid email';
+		errorShake(valEl);
+	    } else {
+		console.error(retVal);
+		valEl.textContent = "There was an error reseting your password.";
+		errorShake(valEl);
+	    }
+	} else {
+	    document.getElementById('password-reset-body').classList.add("hidden-div");
+	    document.getElementById('password-reset-success').classList.remove("hidden-div");
+	}
     })
 }
