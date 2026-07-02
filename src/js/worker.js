@@ -171,11 +171,13 @@ await micropip.install('../../vendor/turtle-0.0.1-py3-none-any.whl')
 import turtle
 import turtleSender
 turtle._CFG['canvwidth'] = ${graphicsWidth}
-turtle._CFG['canvheight'] = ${graphicsHeight}`);
+turtle._CFG['canvheight'] = ${graphicsHeight}
+turtle.Screen().reset()`);
 	    } else if (event.data.python.includes("turtle")) {
 		// just update the dimensions
 		await pyodide.runPythonAsync(`turtle._CFG['canvwidth'] = ${graphicsWidth}
-turtle._CFG['canvheight'] = ${graphicsHeight}`);
+turtle._CFG['canvheight'] = ${graphicsHeight}
+turtle.Screen().reset()`);
 	    }
 	    
 	    pyodide.globals.set("__code_to_evaluate__", event.data.python);

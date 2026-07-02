@@ -74,6 +74,7 @@ export function initWorkerDOM() {
 	    
 	case "turtle_graphics":
 	    console.log("Turtle graphics detected");
+	    console.log(message);
 	    const turtleGraphicEl = elementFromProps(new Map(Object.entries(message)));
 	    // this prevents it from using extra vertical space, which breaks the layout
 	    turtleGraphicEl.style.display = 'block';
