@@ -6,7 +6,7 @@ import { setEditor } from "/src/js/codeMirror.js";
 import { loadFromUIDs } from "/src/js/loading.js";
 import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
 import { debouncedObjFactory, makeSafe } from "/src/js/jsUtils.js";
-import { setProjectName, setProjectId, setOwns,
+import { setProjectName, setProjectId, setOwns, setOwnerId,
 	 getProjectId, getOwnerId, isDirty } from "/src/js/currentProject.js";
 import { errorShake, confirmDialog } from "/src/js/DOMhelpers.js";
 import { setAutosave } from "/src/js/autosaveState.js";

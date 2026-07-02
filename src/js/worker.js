@@ -129,7 +129,6 @@ self.onmessage = async (event) => {
     if (event.data.type == "graphics_dims") {
 	graphicsWidth = event.data.width;
 	graphicsHeight = event.data.height;
-	console.log("Graphics Dimensions:", graphicsWidth, graphicsHeight);
     }
     
     if (event.data.type == "refresh") {

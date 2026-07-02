@@ -7,14 +7,24 @@ function collapseEl(toCollapse, toExpand, newDisplayVal) {
 
 export function initCollapsingUI() {
 
+    function sendGraphicsData() {
+	// this whole computation (as opposed to just clientWidth/clientHeight) is necessary
+	//   because clientWidth will round up, which adds scrollbars and breaks the layout
+	worker.postMessage({ type: "graphics_dims",
+			     width: Math.floor(document.getElementById("graphics").getBoundingClientRect().width), 
+			     height: Math.floor(document.getElementById("graphics").getBoundingClientRect().height) });
+    }
+    
     let collapsedCode = document.getElementById("collapsedCode");
     collapsedCode.style.display = 'none';
     let code = document.getElementById("code");
     collapsedCode.addEventListener("click", () => {
 	collapseEl(collapsedCode, code, 'block');
+	sendGrapicsData();
     })
     document.getElementById("codeMinimize").addEventListener("click", () => {
 	collapseEl(code, collapsedCode, 'flex');
+	sendGraphicsData();
     })
     
     let collapsedTerminal = document.getElementById("collapsedTerminal");
@@ -22,9 +32,11 @@ export function initCollapsingUI() {
     let terminal = document.getElementById("terminal");
     collapsedTerminal.addEventListener("click", () => {
 	collapseEl(collapsedTerminal, terminal, 'block');
+	sendGraphicsData();
     })
     document.getElementById("terminalMinimize").addEventListener("click", () => {
 	collapseEl(terminal, collapsedTerminal, 'flex');
+	sendGraphicsData();
     })
     
     let collapsedGrapics = document.getElementById("collapsedGraphics");
@@ -32,15 +44,14 @@ export function initCollapsingUI() {
     graphics.style.display = 'none';
     collapsedGraphics.addEventListener("click", () => {
 	collapseEl(collapsedGraphics, graphics, 'block');
-	// this whole computation (as opposed to just clientWidth/clientHeight) is necessary
-	//   because clientWidth will round up, which adds scrollbars and breaks the layout
-	worker.postMessage({ type: "graphics_dims",
-	  width: Math.floor(document.getElementById("graphics").getBoundingClientRect().width), 
-	  height: Math.floor(document.getElementById("graphics").getBoundingClientRect().height) });
+	sendGraphicsData();
     })
     
     document.getElementById("graphicsMinimize").addEventListener("click", () => {
 	collapseEl(graphics, collapsedGraphics, 'flex');
+	// no sendGraphicsData() because graphics is minimized so don't need to send width: 0
     })
+
+    window.addEventListener("resize", sendGraphicsData);
     
 }
