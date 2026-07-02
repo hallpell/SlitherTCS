@@ -480,6 +480,16 @@ export function initAccountUI() {
 		errorShake(valEl);
 	    }
 	} else {
+	    // purposefully not calling passwordResetForm.reset() to leave it populated
+
+	    const passwordResetMessage = document.getElementById("password-reset-message");
+	    if (email == identifier) {
+		passwordResetMessage.textContent =
+		    'If there is an account associated with that email, we have sent a password reset link to it';
+	    } else {
+		passwordResetMessage.textContent =
+		    'We have sent a password reset link to ' + email + ' (the email for ' + identifier + ')';
+	    }
 	    document.getElementById('password-reset-body').classList.add("hidden-div");
 	    document.getElementById('password-reset-success').classList.remove("hidden-div");
 	}
