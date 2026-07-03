@@ -324,6 +324,7 @@ button {
     min-width: 0;
     font-family: monospace;
     /*background: #0000ff33;*/
+    background: inherit;
     color: inherit;
     border: none;
     outline: none;
