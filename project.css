@@ -323,7 +323,7 @@ button {
     flex: 1;
     min-width: 0;
     font-family: monospace;
-    background: #0000ff33;
+    /*background: #0000ff33;*/
     color: inherit;
     border: none;
     outline: none;
