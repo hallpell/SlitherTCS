@@ -1,5 +1,7 @@
 import { auth } from "/src/js/firebase.js";
 import { loadFromUIDs } from "/src/js/loading.js";
+import { confirmDialog } from "/src/js/DOMhelpers.js";
+import { isDirty } from "/src/js/currentProject.js";
 
 // returns an array of objects.
 //   Length of array will equal number of projects in colSnap
@@ -40,7 +42,13 @@ export function insertProjects(projs) {
 	// prepend to reverse order
 	frag.prepend(li);
 	li.appendChild(span);
-	li.addEventListener("click", () => {
+	li.addEventListener("click", async () => {
+	    if (isDirty()) {
+		const conf = await confirmDialog("Your current project has unsaved changes, do you really want to load another project?");
+		if (!conf) {
+		    return;
+		}
+	    }
 	    loadFromUIDs(auth.currentUser.uid, p.id);
 	})
     })
