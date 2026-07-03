@@ -360,6 +360,7 @@ export function initAccountUI() {
 	    if (!validSignup.password) {
 		errorShake(document.getElementById("signup-form-password-validation"));
 	    }
+	    console.log("Invalid data in form");
 	    return
 	}
 
@@ -369,6 +370,7 @@ export function initAccountUI() {
 	const doubleCheckUn = await validateUsernameUI();
 	if (!doubleCheckUn) {
 	    // the validateUsernameUI will already display + shake the proper error message
+	    console.log("Username invalid on double check");
 	    return
 	}
 
@@ -394,6 +396,7 @@ export function initAccountUI() {
 		}, 500);
 	    } catch (error) {
 		// this should only be from Firebase errors
+		console.error("Error creating account ", error);
 		logErrors("Issue running transaction creating new user: '" + makeSafe(username)
 			  + "' with UID: '" + userCred.user.uid + "'", error.message);
 	    }

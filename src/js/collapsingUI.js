@@ -14,6 +14,8 @@ export function initCollapsingUI() {
 			     width: Math.floor(document.getElementById("graphics").getBoundingClientRect().width), 
 			     height: Math.floor(document.getElementById("graphics").getBoundingClientRect().height) });
     }
+
+    sendGraphicsData(); // once for initialization
     
     let collapsedCode = document.getElementById("collapsedCode");
     collapsedCode.style.display = 'none';

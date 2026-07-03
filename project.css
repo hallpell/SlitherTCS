@@ -264,6 +264,7 @@ button {
 
 #graphics {
     height: calc(100% - 20px);
+    overflow: auto;
 }
 
 #collapsedCode, #collapsedTerminal, #collapsedGraphics {

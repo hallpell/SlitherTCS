@@ -1,12 +1,13 @@
 import { worker } from "/src/js/workerClient.js";
 import { setRunningStatus } from "/src/js/runningStatus.js";
 
+const SVG_NS = "http://www.w3.org/2000/svg";
 // code to jam turtle graphics into the graphics box
 const elementFromProps = (map) => {
     const tag = map.get("tag");
     if (!tag) { return document.createTextNode(map.get("tag")); }
     
-    const node = document.createElement(map.get("tag"));
+    const node = document.createElementNS(SVG_NS, map.get("tag"));
     
     const pProps = map.get("props")
     const props = pProps instanceof Map ? pProps : new Map(Object.entries(pProps))
@@ -79,10 +80,12 @@ export function initWorkerDOM() {
 	    // this prevents it from using extra vertical space, which breaks the layout
 	    turtleGraphicEl.style.display = 'block';
 	    document.getElementById("graphics").innerHTML = turtleGraphicEl.outerHTML;
+	    turtleGraphicEl.setCurrentTime(0);
 	    break;
 
 	case "matplotlib":
 	    console.log("Got a plot from matplotlib");
+	    console.log(message);
 	    const blob = new Blob([message], { type: 'image/png' });
 	    const url = URL.createObjectURL(blob);
 
@@ -90,7 +93,7 @@ export function initWorkerDOM() {
 	    img.src = url;
 	    img.onload = () => URL.revokeObjectURL(url);
 	    
-	    document.getElementById("graphics").appendChild(img);
+	    document.getElementById("graphics").replaceChildren(img);
 	    break;
 	    
 	case "stdin_request":

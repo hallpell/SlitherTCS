@@ -7,7 +7,6 @@ import { initEditor, getEditor } from "/src/js/codeMirror.js";
 import { initThemeUpdates } from "/src/js/themeUpdates.js";
 import { initCollapsingUI } from "/src/js/collapsingUI.js";
 import { initTerminalDOM } from "/src/js/terminalDOM.js";
-import { initMatPlotLibAttacher } from "/src/js/matPlotLibAttacher.js"; // TODO: FIX (broken from webWorker)
 import { initWorkerDOM } from "/src/js/workerDOM.js";
 import { initTerminalUI } from "/src/js/terminalUI.js";
 import { initAccountUI } from "/src/js/accountUI.js";
@@ -19,18 +18,11 @@ initEditor();
 initThemeUpdates();
 initCollapsingUI();
 initTerminalDOM();
-initMatPlotLibAttacher(); // TODO: FIX (broken from webWorker)
 initWorkerDOM();
 initTerminalUI();
 initAccountUI();
 initSaveUI();
 initLoad();
 initRunningStatus();
-
-// this whole computation (as opposed to just clientWidth/clientHeight) is necessary
-//   because clientWidth will round up, which adds scrollbars and breaks the layout
-worker.postMessage({ type: "graphics_dims",
-     width: Math.floor(document.getElementById("graphics").getBoundingClientRect().width), 
-     height: Math.floor(document.getElementById("graphics").getBoundingClientRect().height) });
 
 

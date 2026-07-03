@@ -202,15 +202,18 @@ def worker_show(*args, **kwargs):
     for fig in figures:
         buf = io.BytesIO()
         fig.savefig(buf, format="png", dpi=150)
-        buf.seek(0)
-        img = Uint8Array.new(buf.getvalue())
+
+        png = buf.getvalue()
+
+        arr = Uint8Array.new(len(png))
+        arr.assign(png)
 
         postMessage(
-            {
+            to_js({
                 "type": "matplotlib",
-                "message": img
-            },
-            [img.buffer]
+                "message": arr.buffer
+            }),
+            [arr.buffer]
         )
 
     plt.close("all")
