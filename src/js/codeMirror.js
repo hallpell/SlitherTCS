@@ -10,7 +10,17 @@ export function initEditor() {
 	    tabSize: 2,
 	    indentWithTabs: false,
 	    lineWrapping: false,
-	    theme: "eclipse"
+	    theme: "eclipse",
+	    extraKeys: {
+		Tab: function(cm) {
+		    if (cm.somethingSelected()) {
+			cm.execCommand("indentMore");
+		    } else {
+			cm.execCommand("insertSoftTab");
+		    }
+		},
+		"Shift-Tab": "indentLess"
+	    }
 	});
 }
 

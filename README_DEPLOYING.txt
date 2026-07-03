@@ -1,4 +1,5 @@
-As of 6/8/26, this is hosted with firebase (at both slithertcs.web.app and slithertcs.com). The domain is registered through namecheap.com.
+As of 7/2/26, this is hosted with firebase (at both slithertcs-b7d93.web.app and slithertcs.com).
+The custom domain (slithertcs.com) is registered through namecheap.com.
 
 The deploying process should look like:
 git pull

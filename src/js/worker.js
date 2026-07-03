@@ -110,6 +110,9 @@ self.sendTurtleData = (e) => {
     self.postMessage({ type: "turtle_graphics", message: e.toJs ? e.toJs() : e });
 }
 
+// code for handling matplotlib plots
+let hasPlt = false;
+
 self.requestInput = function(inputPrompt) {
     self.postMessage({
 	type: "stdin_request",
@@ -178,6 +181,41 @@ turtle.Screen().reset()`);
 		await pyodide.runPythonAsync(`turtle._CFG['canvwidth'] = ${graphicsWidth}
 turtle._CFG['canvheight'] = ${graphicsHeight}
 turtle.Screen().reset()`);
+	    }
+
+	    if (event.data.python.includes("matplotlib") && !hasPlt) {
+		console.log("Doing matplotlib monkeypatch")
+		await pyodide.runPythonAsync(`
+import matplotlib
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+import io
+from js import postMessage, Uint8Array
+from pyodide.ffi import to_js
+
+_original_show = plt.show
+
+def worker_show(*args, **kwargs):
+    figures = [plt.figure(n) for n in plt.get_fignums()]
+
+    for fig in figures:
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", dpi=150)
+        buf.seek(0)
+        img = Uint8Array.new(buf.getvalue())
+
+        postMessage(
+            {
+                "type": "matplotlib",
+                "message": img
+            },
+            [img.buffer]
+        )
+
+    plt.close("all")
+
+plt.show = worker_show`);
 	    }
 	    
 	    pyodide.globals.set("__code_to_evaluate__", event.data.python);

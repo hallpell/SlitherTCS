@@ -32,7 +32,7 @@ function isUsernameInvalid(username) {
     ]);
     
     if (!regex.test(username)) {
-	return "Invalid format";
+	return "Username must be 3-20 characters, and can only include alphanumeric characters, '.', and'_'";
     }
     
     if (reserved.has(username.toLowerCase())) {
@@ -64,8 +64,9 @@ async function validateUsernameUI() {
 	return false;
     }
 
+    let snap
     try {
-	const snap = await getDoc(doc(db, "usernames", makeSafe(proposedUsername)));
+	snap = await getDoc(doc(db, "usernames", makeSafe(proposedUsername)));
     } catch (error) {
 	console.error(error);
     }
@@ -204,6 +205,7 @@ export function initAccountUI() {
 			setAutosave(data.autosave);
 		    }
 		} else {
+		    // this can fire when an account is first created and it isn't an issue
 		    console.log("No display name stored for " + user.uid);
 		    setAccountUI("Profile");
 		}

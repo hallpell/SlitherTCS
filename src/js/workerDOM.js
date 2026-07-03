@@ -80,6 +80,18 @@ export function initWorkerDOM() {
 	    turtleGraphicEl.style.display = 'block';
 	    document.getElementById("graphics").innerHTML = turtleGraphicEl.outerHTML;
 	    break;
+
+	case "matplotlib":
+	    console.log("Got a plot from matplotlib");
+	    const blob = new Blob([message], { type: 'image/png' });
+	    const url = URL.createObjectURL(blob);
+
+	    const img = document.createElement("img");
+	    img.src = url;
+	    img.onload = () => URL.revokeObjectURL(url);
+	    
+	    document.getElementById("graphics").appendChild(img);
+	    break;
 	    
 	case "stdin_request":
 	    console.log("stdin_request detected")
