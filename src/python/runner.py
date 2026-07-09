@@ -1,6 +1,7 @@
 from code import InteractiveConsole
 import sys
 
+# creating a superclass to make handling keyboard interrupts less ugly
 class myConsole(InteractiveConsole):
     def showtraceback(self):
         typ, value, tb = sys.exc_info()

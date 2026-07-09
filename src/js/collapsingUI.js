@@ -22,7 +22,7 @@ export function initCollapsingUI() {
     let code = document.getElementById("code");
     collapsedCode.addEventListener("click", () => {
 	collapseEl(collapsedCode, code, 'block');
-	sendGrapicsData();
+	sendGraphicsData();
     })
     document.getElementById("codeMinimize").addEventListener("click", () => {
 	collapseEl(code, collapsedCode, 'flex');

@@ -3,6 +3,9 @@ import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodi
 let pyodide;
 let interruptBuffer;
 
+let graphicsWidth = null;
+let graphicsHeight = null;
+
 async function init() {
     pyodide = await loadPyodide();
     const decoder = new TextDecoder();
@@ -66,12 +69,11 @@ async function init() {
 
 
     // refactor these imports into a wheel once stable
-    console.log("Hacky python import"); 
     const response = await fetch("/src/python/runner.py");
     const code = await response.text();
 
     pyodide.FS.writeFile("runner.py", code);
-    await pyodide.runPythonAsync(`import runner`);
+    await pyodide.runPythonAsync(`import runner`)
 
     console.log("Overwritting input")
     await pyodide.runPythonAsync(`import asyncio
@@ -93,16 +95,23 @@ def input(prompt=""):
 
 builtins.input = input`)
 
+    console.log("Registering graphics size getter")
+    pyodide.globals.set("__get_graphics_size__", () => ({
+	width: graphicsWidth,
+	height: graphicsHeight
+    }))
 
+    await pyodide.runPythonAsync(`def get_graphics_size():
+  hold = __get_graphics_size__().to_py()
+  return hold['width'], hold['height']
 
+runner.env['get_graphics_size'] = get_graphics_size`);
+    
     console.log("Done loading")
     //    pyodide.setDebug(true);
 }
 
 const ready = init();
-
-let graphicsWidth;
-let graphicsHeight;
 
 // code for handling turtle
 let hasTurtle = false;
@@ -173,13 +182,13 @@ print("loading turtle")
 await micropip.install('../../vendor/turtle-0.0.1-py3-none-any.whl')
 import turtle
 import turtleSender
-turtle._CFG['canvwidth'] = ${graphicsWidth}
-turtle._CFG['canvheight'] = ${graphicsHeight}
+turtle._CFG['canvwidth'] = get_graphics_size()[0]
+turtle._CFG['canvheight'] = get_graphics_size()[1]
 turtle.Screen().reset()`);
-	    } else if (event.data.python.includes("turtle")) {
+	    } else if (event.data.python.includes("turtle") && event.data.source === 'editor') {
 		// just update the dimensions
-		await pyodide.runPythonAsync(`turtle._CFG['canvwidth'] = ${graphicsWidth}
-turtle._CFG['canvheight'] = ${graphicsHeight}
+		await pyodide.runPythonAsync(`turtle._CFG['canvwidth'] = get_graphics_size()[0]
+turtle._CFG['canvheight'] = get_graphics_size()[1]
 turtle.Screen().reset()`);
 	    }
 
@@ -218,7 +227,12 @@ def worker_show(*args, **kwargs):
 
     plt.close("all")
 
-plt.show = worker_show`);
+plt.show = worker_show
+
+def get_figsize():
+  hold = get_graphics_size()
+  return (hold[0]/150, hold[1]/150)
+plt.get_figsize = get_figsize`);
 	    }
 	    
 	    pyodide.globals.set("__code_to_evaluate__", event.data.python);
