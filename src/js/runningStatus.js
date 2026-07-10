@@ -2,7 +2,10 @@ import { worker } from "/src/js/workerClient.js";
 import { gatherAndRunEditorCode } from "/src/js/runner.js";
 import { getEditor } from "/src/js/codeMirror.js";
 
-let runningStatus = 'ready';
+// if the terminal will accept input
+let runningStatus = 'initializing';
+// if the terminal has done any work (and thus should display refreshes when applicable)
+let terminalFresh = true;
 
 export function getRunningStatus() {
     return runningStatus;
@@ -19,6 +22,14 @@ export function setRunningStatus(val) {
 	runButton.classList.remove('running-disabled');
     }
     runningStatus = val;
+}
+
+export function getTerminalFresh() {
+    return terminalFresh;
+}
+
+export function makeTerminalDirty() {
+    terminalFresh = false;
 }
 
 const interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
@@ -48,8 +59,6 @@ export function sendInterrupt() {
 export function initRunningStatus() {
     worker.postMessage({ type: "init_buffer",
 			 interruptBuffer: interruptBuffer });
-
-    setRunningStatus("ready");
 
     // these still fire when "inactive" - handlers in charge of checking that intelligently
     document.getElementById("stopCode").addEventListener("click", sendInterrupt);

@@ -1,10 +1,10 @@
 import { worker } from "/src/js/workerClient.js"
-import { getRunningStatus, setRunningStatus } from "/src/js/runningStatus.js"
 import { getEditor } from "/src/js/codeMirror.js"
+import { getRunningStatus, setRunningStatus, getTerminalFresh, makeTerminalDirty }
+  from "/src/js/runningStatus.js"
 
 export async function runEditorCode(code){
-    console.log("Starting to run editor code", code);
-    
+    makeTerminalDirty();
     setRunningStatus('busy');
 	
     // send a message to reset the interactive console
@@ -21,8 +21,7 @@ export async function runEditorCode(code){
 }
 
 export async function runTerminalCode(code){
-    console.log("Starting to run terminal code", code)
-    
+    makeTerminalDirty();
     setRunningStatus('busy');
     
     worker.postMessage({
@@ -35,7 +34,9 @@ export async function runTerminalCode(code){
 // this is for running the code in the editor
 export async function gatherAndRunEditorCode() {
     if (getRunningStatus() === 'ready') {
-	document.getElementById("output").addError("Running file, refreshing environment");
+	if (!getTerminalFresh()) {
+	    document.getElementById("output").addError("Running file, refreshing environment");
+	}
 	let code = getEditor().getValue();
 	await runEditorCode(code);
     } else {

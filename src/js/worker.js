@@ -107,7 +107,8 @@ builtins.input = input`)
 
 runner.env['get_graphics_size'] = get_graphics_size`);
     
-    console.log("Done loading")
+    console.log("Done loading");
+    self.postMessage({ type: "status", message: "initialized" });
     //    pyodide.setDebug(true);
 }
 

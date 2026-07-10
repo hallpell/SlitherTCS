@@ -1,3 +1,4 @@
+import { worker } from "/src/js/workerClient.js";
 import { setEditor } from "/src/js/codeMirror.js";
 import { db, auth } from "/src/js/firebase.js";
 import { logErrors } from "/src/js/firebaseHelpers.js";
@@ -5,6 +6,7 @@ import { setProjectName, setProjectId, setOwns, setOwnerId,
          getProjectName, getProjectId, makeClean } from "/src/js/currentProject.js";
 import { makeSafe } from "/src/js/jsUtils.js";
 import { genericError } from "/src/js/DOMhelpers.js";
+import { getTerminalFresh } from "/src/js/runningStatus.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 // WARNING: This will overwrite the current contents of the editor. It should
@@ -24,6 +26,12 @@ export function loadFromUIDs(userId, projectId, updateState=true, pushState=true
 	    setOwns(isOwner);
 	    setOwnerId(userId);
 	    makeClean();
+
+	    if (!getTerminalFresh()) {
+		document.getElementById("output").addError("Loading project, reseting environment");
+		worker.postMessage({ type: "refresh", python: undefined });
+		document.getElementById("output").printPrompt();
+	    }
 	    
 	    if (updateState) {
 		const newState = {

@@ -60,5 +60,5 @@ export function initTerminalDOM() {
 	ourInput.value = '';
     }
 
-    output.printPrompt();
+    //output.printPrompt();
 }

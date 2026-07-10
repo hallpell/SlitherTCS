@@ -58,6 +58,7 @@ export function initWorkerDOM() {
 	    break;
 	    
 	case "status":
+	    console.log("Status: ", message);
 	    if (message === "done" || message === "error" || message === "abandoned") {
 		if (message === "abandoned") {
 		    output.addError("KeyboardInterrupt");
@@ -65,7 +66,10 @@ export function initWorkerDOM() {
 		output.printPrompt();
 		setRunningStatus('ready');
 	    }
-	    console.log("Status:", message);
+	    if (message === "initialized") {
+		output.printPrompt();
+		setRunningStatus('ready');
+	    }
 	    break;
 	    
 	case "incomplete":
