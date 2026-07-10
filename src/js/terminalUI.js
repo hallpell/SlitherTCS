@@ -1,6 +1,7 @@
 import { getRunningStatus, setRunningStatus, sendInterrupt } from "/src/js/runningStatus.js";
 import { worker } from "/src/js/workerClient.js";
 import { runTerminalCode } from "/src/js/runner.js";
+import { getEditor } from "/src/js/codeMirror.js";
 
 export async function initTerminalUI() {
     const ourInput = document.getElementById("repl-input");
@@ -73,6 +74,32 @@ export async function initTerminalUI() {
 	    } else {
 		// pass, terminal status is busy.
 		// TODO: Think about good UI to indicate nothing is happening
+	    }
+	} // Enter
+
+	else if (e.key === "Tab" && e.shiftKey) {
+	    e.preventDefault();
+
+	    getEditor().focus();
+	} else if (e.key === "Tab") {
+	    e.preventDefault();
+
+	    const start = ourInput.selectionStart;
+	    const end = ourInput.selectionEnd;
+	    const val = ourInput.value;
+
+	    // if everything before the cursor is whitespace
+	    if (val.slice(0, start).trim().length === 0) {
+		// add an indent level to ourInput
+		let numSpaces = 2*(Math.floor(start/2)+1);
+		ourInput.value = " ".repeat(numSpaces) + val.slice(end);
+		ourInput.setSelectionRange(numSpaces, numSpaces);
+	    } else {
+		// replace tab with 2 spaces
+		//   (I'm not sure how reasonable this is -
+		//      I'd like it to be autocomplete (or fail and pass), but that's not currently very feasible?)
+		ourInput.value = val.slice(0, start) + "  " + val.slice(end);
+		ourInput.setSelectionRange(start, start);
 	    }
 	}
 	

@@ -54,11 +54,9 @@ export function initWorkerDOM() {
 		//   if it is not present, we skip this and just display another prompt
 		output.addText(message);
 	    }
-	    console.log("Result: " + message);
 	    break;
 	    
 	case "status":
-	    console.log("Status: ", message);
 	    if (message === "done" || message === "error" || message === "abandoned") {
 		if (message === "abandoned") {
 		    output.addError("KeyboardInterrupt");
@@ -78,8 +76,6 @@ export function initWorkerDOM() {
 	    break;
 	    
 	case "turtle_graphics":
-	    console.log("Turtle graphics detected");
-	    console.log(message);
 	    const turtleGraphicEl = elementFromProps(new Map(Object.entries(message)));
 	    // this prevents it from using extra vertical space, which breaks the layout
 	    turtleGraphicEl.style.display = 'block';
@@ -88,8 +84,6 @@ export function initWorkerDOM() {
 	    break;
 
 	case "matplotlib":
-	    console.log("Got a plot from matplotlib");
-	    console.log(message);
 	    const blob = new Blob([message], { type: 'image/png' });
 	    const url = URL.createObjectURL(blob);
 
@@ -101,7 +95,6 @@ export function initWorkerDOM() {
 	    break;
 	    
 	case "stdin_request":
-	    console.log("stdin_request detected")
 	    output.addText(message);
 	    setRunningStatus('awaitingInput');
 	    // force the focus on input (which will also make the cursor blink)
