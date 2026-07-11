@@ -145,8 +145,8 @@ self.onmessage = async (event) => {
     }
     
     if (event.data.type == "refresh") {
-	await pyodide.runPythonAsync(`runner.refresh()`);
-	
+	await pyodide.runPythonAsync(`runner.refresh()
+runner.env['get_graphics_size'] = get_graphics_size`);
 	self.postMessage({ type: "status", message: "refreshed" });
     }
 
