@@ -183,8 +183,20 @@ print("loading turtle")
 await micropip.install('../../vendor/turtle-0.0.1-py3-none-any.whl')
 import turtle
 import turtleSender
-turtle._CFG['canvwidth'] = get_graphics_size()[0]
-turtle._CFG['canvheight'] = get_graphics_size()[1]
+
+def set_canvas_size(x=None,y=None):
+  if x is None:
+    turtle._CFG['canvwidth'] = get_graphics_size()[0]
+    turtle._CFG['canvheight'] = get_graphics_size()[1]
+    return
+  if y is None:
+    x, y = x[0], x[1]
+  turtle._CFG['canvwidth'] = x
+  turtle._CFG['canvheight'] = y
+
+turtle.set_canvas_size = set_canvas_size
+turtle.set_canvas_size()
+
 turtle.Screen().reset()`);
 	    } else if (event.data.python.includes("turtle") && event.data.source === 'editor') {
 		// just update the dimensions
