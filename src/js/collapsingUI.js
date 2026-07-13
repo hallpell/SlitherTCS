@@ -39,6 +39,9 @@ export function initCollapsingUI() {
     document.getElementById("terminalMinimize").addEventListener("click", () => {
 	collapseEl(terminal, collapsedTerminal, 'flex');
 	sendGraphicsData();
+
+	// this resets the error pulse from getting an error while the terminal is collapsed
+	document.getElementById("collapsedTerminalText").classList.remove("error-pulse");
     })
     
     let collapsedGrapics = document.getElementById("collapsedGraphics");

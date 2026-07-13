@@ -44,6 +44,12 @@ export function initWorkerDOM() {
 		    errorMessage = message.substring(userError);
 		}
 		output.addError(errorMessage);
+
+		// if we get an error and the terminal is hidden, add a pulse to the collapsed text to
+		//   draw the user's eye that an error occurred
+		if (document.getElementById('collapsedTerminal').style.display != 'none') {
+		    document.getElementById('collapsedTerminalText').classList.add('error-pulse')
+		}
 	    }
 	    break;
 	    
