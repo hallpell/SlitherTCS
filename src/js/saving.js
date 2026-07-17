@@ -25,6 +25,7 @@ async function createNewProject(uid, projectName, safeProjectName, code) {
     }
     const nameRef = doc(db, "users", uid, "projectNames", safeProjectName);
     const projRef = doc(collection(db, "users", uid, "projects"));
+    const versionRef = doc(projRef, "versions", "1");
 
     try {
 	await runTransaction(db, async (transaction) => {
@@ -41,7 +42,14 @@ async function createNewProject(uid, projectName, safeProjectName, code) {
 		createdAt: serverTimestamp(),
 		updatedAt: serverTimestamp(),
 		ownerId: uid,
+		currentVersion: 1,
 		isPublic: true
+	    });
+
+	    transaction.set(versionRef, {
+		code: code,
+		versionNum: 1,
+		createdAt: serverTimestamp()
 	    });
 
 	    transaction.set(nameRef, {
@@ -60,16 +68,48 @@ async function createNewProject(uid, projectName, safeProjectName, code) {
     }
 }
 
-// this will let any errors populate up, so must be handled
-function updateProject(uid, projId, projName, code) {
-    setDoc(doc(db, "users", uid, "projects", projId), {
-	code: code,
-	updatedAt: serverTimestamp()
-    }, { merge: true })
+async function updateProject(uid, projId, projName, code) {
+    const projSnap = await getDoc(doc(db, "users", uid, "projects", projId));
+    if (!projSnap.exists()) {
+	console.error("Project doesn't exist already, but sent to update");
+	return false;
+    }
 
-    setDoc(doc(db, "users", uid, "projectNames", projName), {
-	updatedAt: serverTimestamp()
-    }, { merge: true })
+    let newVersion;
+    // this is for migrating over projects created before versions existed, it
+    //   shouldn't be necessary for newly created projects
+    if (Object.hasOwn(projSnap.data(), "currentVersion")) {
+	newVersion = projSnap.data().currentVersion + 1;
+    } else {
+	newVersion = 1;
+    }
+
+    const nameRef = doc(db, "users", uid, "projectNames", projName);
+    const docRef = doc(db, "users", uid, "projects", projId);
+    const versionRef = doc(db, "users", uid, "projects", projId, "versions", String(newVersion));
+    try {
+	await runTransaction(db, async (transaction) => {
+
+	    transaction.set(nameRef, {
+		updatedAt: serverTimestamp()
+	    }, { merge: true });
+
+	    transaction.set(docRef, {
+		code: code,
+		updatedAt: serverTimestamp(),
+		currentVersion: newVersion
+	    }, { merge: true });
+
+	    transaction.set(versionRef, {
+		code: code,
+		versionNum: newVersion,
+		createdAt: serverTimestamp()
+	    });
+	})
+    } catch (e) {
+	console.error("Error in transaction updating project: ", e);
+    }
+    return true;
 }
 
 async function nameAndSave(code) {
