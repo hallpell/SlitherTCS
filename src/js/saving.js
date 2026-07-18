@@ -9,6 +9,7 @@ import { errorShake, genericError } from "/src/js/DOMhelpers.js";
 import { makeSafe, debounce } from "/src/js/jsUtils.js";
 import { getAutosave, toggleAutosave } from "/src/js/autosaveState.js";
 import { insertProject } from "/src/js/profileMenuUtils.js";
+import { setVersion, setMaxVersion } from "/src/js/versionUI.js";
 
 import { doc, collection, addDoc, setDoc, getDoc, runTransaction, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
@@ -59,6 +60,8 @@ async function createNewProject(uid, projectName, safeProjectName, code) {
 		updatedAt: serverTimestamp()
 	    });
 	})
+	setVersion(1);
+	setMaxVersion(1);
 	return { status: true, projectId: projRef.id };
     } catch (error) {
 	// maybe we don't need to console log this since we return it?
@@ -109,6 +112,8 @@ async function updateProject(uid, projId, projName, code) {
     } catch (e) {
 	console.error("Error in transaction updating project: ", e);
     }
+    setVersion(newVersion);
+    setMaxVersion(newVersion);
     return true;
 }
 

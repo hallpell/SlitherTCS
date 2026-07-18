@@ -3,28 +3,69 @@ import { setEditor } from "/src/js/codeMirror.js";
 import { db, auth } from "/src/js/firebase.js";
 import { logErrors } from "/src/js/firebaseHelpers.js";
 import { setProjectName, setProjectId, setOwns, setOwnerId,
-         getProjectName, getProjectId, makeClean } from "/src/js/currentProject.js";
+         getProjectName, getProjectId, getOwnerId, makeClean } from "/src/js/currentProject.js";
 import { makeSafe } from "/src/js/jsUtils.js";
 import { genericError } from "/src/js/DOMhelpers.js";
 import { getTerminalFresh } from "/src/js/runningStatus.js";
+import { setVersion, setMaxVersion } from "/src/js/versionUI.js";
+
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 // WARNING: This will overwrite the current contents of the editor. It should
 //   only be called if you have verified that you're okay with that
-//   (i.e. current project is clean or (no current project && editorEmpty) or user verification
+//   (i.e. current project is clean or (no current project && editorEmpty) or user verification)
 // called for side effects, no return value
 // updateState is a boolean determining if we should update the state of the history
 // pushState will pushState if true (default) or replaceState if false
+// versionNum will specify a version number to load. If omitted, the most recent version will be loaded
 // TODO: continue propagating errors up the chain???
-export function loadFromUIDs(userId, projectId, updateState=true, pushState=true, safeUN) {
-    getDoc(doc(db, 'users', userId, 'projects', projectId)).then((snap) => {
+export function loadFromUIDs(userId, projectId, updateState=true, pushState=true, safeUN, versionNum) {
+    getDoc(doc(db, 'users', userId, 'projects', projectId)).then(async (snap) => {
 	if (snap.exists() && "code" in snap.data()) {
-	    setEditor(snap.data().code);
+	    let code;
+	    let usingVersion = false;
+	    // if we don't have version info, just load the code in the main project
+	    if (versionNum === undefined || !Object.hasOwn(snap.data(), "currentVersion")) {
+		code = snap.data().code;
+		// if version number doesn't refer to a valid past version, just give up and load normal code
+	    } else if (versionNum < -snap.data().currentVersion ||
+		       versionNum >= snap.data().currentVersion ||
+		       versionNum == 0) {
+		code = snap.data().code;
+	    } else {
+		// if we have a negative version number
+		if (versionNum < 0) {
+		    versionNum = snap.data().currentVersion + versionNum
+		}
+		// using await here because using .then makes it hard to avoid duplicating code
+		let versionSnap = await getDoc(doc(db, 'users', userId,
+						   'projects', projectId,
+						   'versions', String(versionNum)));
+		if (versionSnap.exists() && "code" in versionSnap.data()) {
+		    code = versionSnap.data().code;
+		    usingVersion = true;
+		} else { // can't find the version for some reason, just give up and load normal code
+		    code = snap.data().code;
+		}
+	    }
+	    setEditor(code);
 	    setProjectName(snap.data().safeName);
 	    setProjectId(projectId);
 	    const isOwner = auth.currentUser && userId == auth.currentUser.uid;
 	    setOwns(isOwner);
 	    setOwnerId(userId);
+	    if (usingVersion) {
+		setVersion(versionNum);
+		setMaxVersion(snap.data().currentVersion);
+	    } else if (!Object.hasOwn(snap.data(), 'currentVersion')) {
+		setVersion(1);
+		setMaxVersion(1);
+		versionNum = 1;
+	    } else {
+		setVersion(snap.data().currentVersion);
+		setMaxVersion(snap.data().currentVersion);
+		versionNum = snap.data().currentVersion;
+	    }
 	    makeClean();
 
 	    if (!getTerminalFresh()) {
@@ -37,11 +78,17 @@ export function loadFromUIDs(userId, projectId, updateState=true, pushState=true
 		const newState = {
 		    safeProjectName: snap.data().safeName,
 		    projectId: projectId,
-		    uid: userId };
+		    uid: userId,
+		    version: versionNum
+		};
 		let newURL = "/";
 		if (safeUN !== undefined) {
 		    newState.safeUN = safeUN;
 		    newURL = "/" + safeUN + "/" + newState.safeProjectName;
+
+		    if (usingVersion) {
+			newURL += "/" + versionNum;
+		    }
 
 		    if (pushState) {
 			history.pushState(newState, "", newURL);
@@ -52,6 +99,11 @@ export function loadFromUIDs(userId, projectId, updateState=true, pushState=true
 		    getDoc(doc(db, 'users', userId)).then((userSnap) => {
 			newState.safeUN = userSnap.data().safeName;
 			newURL = "/" + newState.safeUN + "/" + newState.safeProjectName;
+
+			if (usingVersion) {
+			    newURL += "/" + versionNum;
+			}
+			
 			if (pushState) {
 			    history.pushState(newState, "", newURL);
 			} else {
@@ -87,14 +139,14 @@ export function loadFromUIDs(userId, projectId, updateState=true, pushState=true
 // allow loading projects if you just know username + projectname
 // returns true if it successfully found UID and projectID and dispatched,
 //   false if the project could not be found
-export async function loadFromNames(username, safeProjectName) {
+export async function loadFromNames(username, safeProjectName, versionNum) {
     let unSnap = await getDoc(doc(db, "usernames", username));
     if (unSnap.exists()) {
 	let uid = unSnap.data().uid;
 	let projSnap = await getDoc(doc(db, "users", uid,
 					"projectNames", safeProjectName));
 	if (projSnap.exists()) {
-	    loadFromUIDs(uid, projSnap.data().projectId, true, false, username);
+	    loadFromUIDs(uid, projSnap.data().projectId, true, false, username, versionNum);
 	    return true;
 	}
     }
@@ -108,7 +160,7 @@ export async function loadFromURL() {
     // if this looks like a username + projectName
     if (parts.length == 2) {
 	// try to load it
-	const foundProject = loadFromNames(parts[0], parts[1]);
+	const foundProject = await loadFromNames(parts[0], parts[1]);
 	// if we can't load it, give an error
 	if (!foundProject) {
 	    genericError("Couldn\'t find project '" + parts[1] +
@@ -120,8 +172,21 @@ export async function loadFromURL() {
 	    return false;
 	}
 	return true;
+    } else if (parts.length == 3 && Number.isInteger(parseFloat(parts[2]))) {
+	// same thing, but with the version number
+	const foundProject = await loadFromNames(parts[0], parts[1], parts[2]);
+	if (!foundProject) {
+	    genericError("Couldn\'t find project '" + parts[1] +
+			 "' from user '" + parts[0] + "'");
+	    history.pushState({}, "", "/");
+	    return false;
+	}
     }
     return false;
+}
+
+export async function loadVersion(versionNum) {
+    loadFromUIDs(getOwnerId(), getProjectId(), false, false, undefined, versionNum);
 }
 
 export async function initLoad() {

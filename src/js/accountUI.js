@@ -7,10 +7,11 @@ import { loadFromUIDs } from "/src/js/loading.js";
 import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
 import { debouncedObjFactory, makeSafe } from "/src/js/jsUtils.js";
 import { setProjectName, setProjectId, setOwns, setOwnerId,
-	 getProjectId, getOwnerId, isDirty } from "/src/js/currentProject.js";
+	 getProjectId, getOwnerId, isDirty, makeClean } from "/src/js/currentProject.js";
 import { errorShake, confirmDialog } from "/src/js/DOMhelpers.js";
 import { setAutosave } from "/src/js/autosaveState.js";
 import { buildTemporallySortedProjects, insertProjects } from "/src/js/profileMenuUtils.js";
+import { hideVersion } from "/src/js/versionUI.js";
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 import { doc, collection, setDoc, getDoc, getDocs, serverTimestamp, runTransaction } from
@@ -168,6 +169,8 @@ export function initAccountUI() {
 	setProjectId(null);
 	setOwns(false);
 	setOwnerId(null);
+	hideVersion();
+	makeClean();
 
 	history.pushState({}, "", "/");
 

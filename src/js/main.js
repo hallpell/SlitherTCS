@@ -13,7 +13,8 @@ import { initAccountUI } from "/src/js/accountUI.js";
 import { initSaveUI } from "/src/js/saving.js";
 import { initLoad } from "/src/js/loading.js";
 import { initRunningStatus } from "/src/js/runningStatus.js";
-    
+import { initVersionUI } from "/src/js/versionUI.js";
+
 initEditor();
 initThemeUpdates();
 initCollapsingUI();
@@ -24,5 +25,6 @@ initAccountUI();
 initSaveUI();
 initLoad();
 initRunningStatus();
+initVersionUI();
 
 
