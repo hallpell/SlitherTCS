@@ -189,7 +189,7 @@
 	      <input id='versionInput' type='number' min=1 max=10></input>
 	      <button id='versionLoad'>Load Version</button>
 	    </div>
-	    <img id='codeMinimize' src='/images/minimize.png' height=16 width=16 class='minimize'></img>
+	    <img id='codeMinimize' src='/images/minimize-light.png' height=16 width=16 class='minimize'></img>
 	  </div>
 	</div>
 	<div id='editor' class=flexbox-item></div>
@@ -207,7 +207,10 @@
 	      <option value='dark'>dark</option>
 	    </select>
 	  </div>
-	  <img id='terminalMinimize' src='/images/minimize.png' height=16 width=16 class='minimize'></img>
+	  <div id='terminalBarRight'>
+	    <button title="Ctrl+Shift+L" id='terminalClear'>Clear Terminal</button>
+	    <img id='terminalMinimize' src='/images/minimize-dark.png' height=16 width=16 class='minimize'></img>
+	  </div>
 	</div>
 	<div id='output'><input id='repl-input' autocomplete="off"></input></div>
       </div>
@@ -218,7 +221,7 @@
       <div id='graphicsContainer' class=flexbox-item>
 	<div id='graphicsBar'>
 	  <span id='graphicsLabel'>Graphics</span>
-	  <img id='graphicsMinimize' src='/images/minimize.png' height=16 width=16 class='minimize'></img>
+	  <img id='graphicsMinimize' src='/images/minimize-dark.png' height=16 width=16 class='minimize'></img>
 	</div>
 	<div id='graphics'></div>
       </div>

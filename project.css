@@ -271,7 +271,7 @@ button {
     height: 20px;
 }
 
-#codeBarRight {
+#codeBarRight, #terminalBarRight {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -296,6 +296,14 @@ button {
 #codeBar, #collapsedCode {
     background-color: #264649;
     color: white;
+}
+
+#terminalClear {
+    font-size: 10px;
+    height: 18px;
+    margin-right: 15px;
+    background-color: #80c3bc;
+    color: #000;
 }
 
 #terminalBar, #collapsedTerminal {

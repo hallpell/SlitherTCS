@@ -60,5 +60,9 @@ export function initTerminalDOM() {
 	ourInput.value = '';
     }
 
-    //output.printPrompt();
+    output.clearTerminal = () => {
+	while (output.firstChild !== output.lastChild) {
+	    output.removeChild(output.firstChild);
+	}
+    }
 }

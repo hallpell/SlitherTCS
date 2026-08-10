@@ -42,6 +42,11 @@ export async function initTerminalUI() {
 	
 	ourInput.focus();
     })
+
+    // this prevents the terminal clear button from being focused from a click (mainly to maintain focus in the terminal)
+    document.getElementById("terminalClear").addEventListener('mousedown', (e) => { e.preventDefault() });
+    // this actually clears the terminal when the button is clicked
+    document.getElementById("terminalClear").addEventListener('click', output.clearTerminal);
     
     let history = [];
     let historyIndex = -1;
@@ -133,6 +138,11 @@ export async function initTerminalUI() {
 	    const l = ourInput.value.length;
 	    ourInput.setSelectionRange(l,l);
 	    e.preventDefault();
+	}
+
+	if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "l") {
+	    e.preventDefault();
+	    output.clearTerminal();
 	}
 	
 	if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {

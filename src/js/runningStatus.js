@@ -60,6 +60,9 @@ export function initRunningStatus() {
     worker.postMessage({ type: "init_buffer",
 			 interruptBuffer: interruptBuffer });
 
+    // make buttons not get focused when clicked - allowing cursor to stay in CodeMirror/Terminal
+    document.getElementById("stopCode").addEventListener("mousedown", (e) => { e.preventDefault() });
+    document.getElementById("runCode").addEventListener("mousedown", (e) => { e.preventDefault() });
     // these still fire when "inactive" - handlers in charge of checking that intelligently
     document.getElementById("stopCode").addEventListener("click", sendInterrupt);
     document.getElementById("runCode").addEventListener("click", gatherAndRunEditorCode);
