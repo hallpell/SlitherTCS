@@ -484,7 +484,7 @@ export function initAccountUI() {
 		errorShake(valEl);
 	    } else {
 		console.error(retVal);
-		valEl.textContent = "There was an error reseting your password.";
+		valEl.textContent = "There was an error resetting your password.";
 		errorShake(valEl);
 	    }
 	} else {
