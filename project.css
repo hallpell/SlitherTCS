@@ -347,10 +347,6 @@ button {
     height: calc(100% - 20px);
 }
 
-#terminal {
-    overflow-y: auto;
-}
-
 .terminal-light-theme {
     background-color: #ffffff;
     color: #000000;
@@ -362,6 +358,9 @@ button {
 }
 
 #output {
+    overflow-y: auto;
+    /* 100% - 40px is 20px for terminal, 10px * 2 for vertical padding on output */
+    height: calc(100% - 40px);
     white-space: pre-wrap;
     font-family: monospace;
     padding: 10px;

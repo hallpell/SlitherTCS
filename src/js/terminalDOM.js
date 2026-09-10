@@ -25,7 +25,7 @@ export function initTerminalDOM() {
 	}
 	
 	output.lastElementChild.insertBefore(newText, ourInput);
-	document.getElementById("terminal").scrollTop = document.getElementById("terminal").scrollHeight;
+	document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
 	if (wasFocused) {
 	    ourInput.focus();
 	}
