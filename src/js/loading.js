@@ -1,4 +1,4 @@
-import { worker } from "/src/js/workerClient.js";
+import { getWorker } from "/src/js/workerClient.js";
 import { setEditor } from "/src/js/codeMirror.js";
 import { db, auth } from "/src/js/firebase.js";
 import { logErrors } from "/src/js/firebaseHelpers.js";
@@ -70,7 +70,7 @@ export function loadFromUIDs(userId, projectId, updateState=true, pushState=true
 
 	    if (!getTerminalFresh()) {
 		document.getElementById("output").addError("Loading project, resetting environment");
-		worker.postMessage({ type: "refresh", python: undefined });
+		getWorker.postMessage({ type: "refresh", python: undefined });
 		document.getElementById("output").printPrompt();
 	    }
 	    

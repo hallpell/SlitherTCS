@@ -2,7 +2,7 @@
 //   export an init function, so is just stuck like this at the top
 import "/src/js/firebase.js";
 
-import { worker } from "/src/js/workerClient.js";
+import { initWorker } from "/src/js/workerClient.js";
 import { initEditor, getEditor } from "/src/js/codeMirror.js";
 import { initThemeUpdates } from "/src/js/themeUpdates.js";
 import { initCollapsingUI } from "/src/js/collapsingUI.js";
@@ -15,6 +15,7 @@ import { initLoad } from "/src/js/loading.js";
 import { initRunningStatus } from "/src/js/runningStatus.js";
 import { initVersionUI } from "/src/js/versionUI.js";
 
+initWorker();
 initEditor();
 initThemeUpdates();
 initCollapsingUI();

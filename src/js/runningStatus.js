@@ -1,4 +1,4 @@
-import { worker } from "/src/js/workerClient.js";
+import { getWorker, terminateWorker } from "/src/js/workerClient.js";
 import { gatherAndRunEditorCode } from "/src/js/runner.js";
 import { getEditor } from "/src/js/codeMirror.js";
 
@@ -32,7 +32,7 @@ export function makeTerminalDirty() {
     terminalFresh = false;
 }
 
-const interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
+//const interruptBuffer = new Int32Array(new SharedArrayBuffer(4));
 
 export function sendInterrupt() {
     console.log("Sending Interrupt");
@@ -44,21 +44,27 @@ export function sendInterrupt() {
 	document.getElementById("output").flush();
 
 	// tell the worker to abandon current statement
-	worker.postMessage({ type: "abandon" });
+	getWorker().postMessage({ type: "abandon" });
 	return
     } else if (runningStatus == "awaitingInput") {
-	worker.postMessage({ type: "input-response", cancelled: true });
+	getWorker().postMessage({ type: "input-response", cancelled: true });
 	return;
     }
 
     // if we're not in a special case, send signal to kill current process
+    // TODO: ensure terminal just gets "Keyboard Interrupt"
+    let output = document.getElementById("output");
+    output.addError("Keyboard Interrupt");
+    terminateWorker();
+   
+    /* old interrupt-buffer based approach
     Atomics.store(interruptBuffer, 0, 2); // 2 = SIGINT-like signal
-    Atomics.notify(interruptBuffer, 0);
+    Atomics.notify(interruptBuffer, 0);*/
 }
 
 export function initRunningStatus() {
-    worker.postMessage({ type: "init_buffer",
-			 interruptBuffer: interruptBuffer });
+    /*worker.postMessage({ type: "init_buffer",
+			 interruptBuffer: interruptBuffer });*/
 
     // make buttons not get focused when clicked - allowing cursor to stay in CodeMirror/Terminal
     document.getElementById("stopCode").addEventListener("mousedown", (e) => { e.preventDefault() });

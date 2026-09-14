@@ -1,12 +1,13 @@
 import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.mjs";
 
 let pyodide;
-let interruptBuffer;
+//let interruptBuffer;
 
 let graphicsWidth = null;
 let graphicsHeight = null;
 
 async function init() {
+    console.log("Loading Pyodide in worker");
     pyodide = await loadPyodide();
     const decoder = new TextDecoder();
 
@@ -107,8 +108,7 @@ builtins.input = input`)
 
 runner.env['get_graphics_size'] = get_graphics_size`);
     
-    console.log("Done loading");
-    self.postMessage({ type: "status", message: "initialized" });
+    console.log("Done loading", Date.now());
     //    pyodide.setDebug(true);
 }
 
@@ -133,11 +133,15 @@ self.requestInput = function(inputPrompt) {
 self.onmessage = async (event) => {
     await ready;
 
-    if (event.data.type == "init_buffer") {
+    if (event.data.type == "promoted_to_main") {
+	self.postMessage({ type: "status", message: "initialized"});
+    }
+
+/*    if (event.data.type == "init_buffer") {
 	interruptBuffer = event.data.interruptBuffer
 	pyodide.setInterruptBuffer(interruptBuffer);
 	console.log("Interrupt Buffer Connected");
-    }
+    }*/
 
     if (event.data.type == "graphics_dims") {
 	graphicsWidth = event.data.width;
@@ -160,7 +164,6 @@ runner.env['get_graphics_size'] = get_graphics_size`);
 	if (Object.hasOwn(event.data, 'cancelled')) {
 	    self._pending_input.cancel()
 	} else {
-	    console.log("Recieved", event.data.value);
 	    const resolve = self._pending_input.toJs();
 	    if (resolve) {
 		resolve.set_result(event.data.value);

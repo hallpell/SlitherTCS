@@ -1,4 +1,4 @@
-import { worker } from "/src/js/workerClient.js";
+import { getWorker } from "/src/js/workerClient.js";
 // code for initializing and adjusting the layout of the screen
 function collapseEl(toCollapse, toExpand, newDisplayVal) {
     toCollapse.style.display = "none";
@@ -10,7 +10,7 @@ export function initCollapsingUI() {
     function sendGraphicsData() {
 	// this whole computation (as opposed to just clientWidth/clientHeight) is necessary
 	//   because clientWidth will round up, which adds scrollbars and breaks the layout
-	worker.postMessage({ type: "graphics_dims",
+	getWorker().postMessage({ type: "graphics_dims",
 			     width: Math.floor(document.getElementById("graphics").getBoundingClientRect().width), 
 			     height: Math.floor(document.getElementById("graphics").getBoundingClientRect().height) });
     }

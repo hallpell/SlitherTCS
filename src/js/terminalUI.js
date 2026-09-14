@@ -1,5 +1,5 @@
 import { getRunningStatus, setRunningStatus, sendInterrupt } from "/src/js/runningStatus.js";
-import { worker } from "/src/js/workerClient.js";
+import { getWorker } from "/src/js/workerClient.js";
 import { runTerminalCode } from "/src/js/runner.js";
 import { getEditor } from "/src/js/codeMirror.js";
 
@@ -73,7 +73,7 @@ export async function initTerminalUI() {
 		output.addText("");
 		
 		ourInput.value = "";
-		worker.postMessage({ type: "input-response", value: response });
+		getWorker().postMessage({ type: "input-response", value: response });
 
 		setRunningStatus('busy');
 	    } else {

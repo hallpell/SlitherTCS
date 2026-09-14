@@ -1,4 +1,4 @@
-import { worker } from "/src/js/workerClient.js";
+import { getWorker } from "/src/js/workerClient.js";
 import { setRunningStatus } from "/src/js/runningStatus.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -21,9 +21,13 @@ const elementFromProps = (map) => {
 }
 
 export function initWorkerDOM() {
+    attachMainWorker();
+}
+
+export function attachMainWorker() {    
     const output = document.getElementById("output");
     const ourInput = document.getElementById("repl-input");
-    worker.onmessage = function (event) {
+    getWorker().onmessage = function (event) {
 	const { type, message } = event.data;
 	
 	switch (type) {
@@ -108,4 +112,5 @@ export function initWorkerDOM() {
 	    break;
 	}
     }
-} 
+    getWorker().postMessage({type: "promoted_to_main"});
+}

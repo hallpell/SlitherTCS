@@ -1,4 +1,4 @@
-import { worker } from "/src/js/workerClient.js"
+import { getWorker } from "/src/js/workerClient.js"
 import { getEditor } from "/src/js/codeMirror.js"
 import { getRunningStatus, setRunningStatus, getTerminalFresh, makeTerminalDirty }
   from "/src/js/runningStatus.js"
@@ -6,7 +6,9 @@ import { getRunningStatus, setRunningStatus, getTerminalFresh, makeTerminalDirty
 export async function runEditorCode(code){
     makeTerminalDirty();
     setRunningStatus('busy');
-	
+
+    let worker = getWorker();
+    
     // send a message to reset the interactive console
     worker.postMessage({
 	type: "refresh",
@@ -24,7 +26,7 @@ export async function runTerminalCode(code){
     makeTerminalDirty();
     setRunningStatus('busy');
     
-    worker.postMessage({
+    getWorker().postMessage({
 	type: "run",
 	python: code,
 	source: "terminal"
