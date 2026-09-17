@@ -1,4 +1,4 @@
-import { getWorker } from "/src/js/workerClient.js";
+import { getWorker, syncBackupPackages } from "/src/js/workerClient.js";
 import { setRunningStatus } from "/src/js/runningStatus.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -109,6 +109,11 @@ export function attachMainWorker() {
 	    setRunningStatus('awaitingInput');
 	    // force the focus on input (which will also make the cursor blink)
 	    ourInput.focus();
+	    break;
+
+	case "pkg_lst":
+	    // pass on new packages to backup worker
+	    syncBackupPackages(message);
 	    break;
 	}
     }

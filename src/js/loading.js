@@ -70,7 +70,7 @@ export function loadFromUIDs(userId, projectId, updateState=true, pushState=true
 
 	    if (!getTerminalFresh()) {
 		document.getElementById("output").addError("Loading project, resetting environment");
-		getWorker.postMessage({ type: "refresh", python: undefined });
+		getWorker().postMessage({ type: "refresh", python: undefined });
 		document.getElementById("output").printPrompt();
 	    }
 	    

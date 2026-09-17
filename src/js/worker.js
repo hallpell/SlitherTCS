@@ -1,7 +1,7 @@
 import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.mjs";
 
 let pyodide;
-//let interruptBuffer;
+let syncedPackages = new Set();
 
 let graphicsWidth = null;
 let graphicsHeight = null;
@@ -108,7 +108,7 @@ builtins.input = input`)
 
 runner.env['get_graphics_size'] = get_graphics_size`);
     
-    console.log("Done loading", Date.now());
+    console.log("Done loading");
     //    pyodide.setDebug(true);
 }
 
@@ -170,10 +170,22 @@ runner.env['get_graphics_size'] = get_graphics_size`);
 	    }
 	}
     }
+
+    // TODO: should this effect status? If we're loading a package and promoted in the middle of that,
+    //   does it make sense to communicate that? And how?
+    if (event.data.type == "background-packages") {
+	await pyodide.loadPackage(event.data.message);
+    }
     
     if (event.data.type == "run") {
 	try {
 	    await pyodide.loadPackagesFromImports(event.data.python);
+	    let curPkgs = new Set(Object.keys(pyodide.loadedPackages));
+	    let newPkgs = [...curPkgs].filter(p => !syncedPackages.has(p))
+	    if (newPkgs.length) {
+		self.postMessage({ type: "pkg_lst", message: newPkgs });
+		newPkgs.forEach(p => syncedPackages.add(p));
+	    }
 
 	    if (event.data.python.includes("turtle") && !hasTurtle) {
 		hasTurtle = true;

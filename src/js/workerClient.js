@@ -34,6 +34,16 @@ export function terminateWorker() {
     }
 }
 
+export function syncBackupPackages(pkgLst) {
+    if (backupWorker !== null) {
+	backupWorker.postMessage({ type: "background-packages",
+				   message: pkgLst });
+    }
+    // if backup worker is null (i.e. still loading), we can just give up on syncing packages
+    //   as it means we are struggling to regenerate backup workers fast enough
+    //   and can let the user wait on packages loading when this is promoted + run
+}
+
 export function initWorker() {
     mainWorker = new Worker(new URL("./worker.js", import.meta.url),
 			    {type: 'module'});
