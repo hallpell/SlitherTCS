@@ -16,14 +16,30 @@ const saveEl = document.getElementById("save");
 
 export function makeDirty() {
     dirty = true;
+    saveEl.textContent = 'Save';
     saveEl.classList.add('save-dirty');
     saveEl.classList.remove('save-clean');
+    saveEl.classList.remove('save-saving');
 }
 
 export function makeClean() {
     dirty = false;
+    saveEl.textContent = 'Saved';
     saveEl.classList.add('save-clean');
     saveEl.classList.remove('save-dirty');
+    saveEl.classList.remove('save-saving');
+}
+
+export function makeSaving() {
+    // don't disturb dirty, but this generally should only be called when dirty==true
+    saveEl.textContent = 'Saving...';
+    saveEl.classList.add('save-saving');
+    saveEl.classList.remove('save-dirty');
+    saveEl.classList.remove('save-clean');
+}
+
+export function isSaving() {
+    return saveEl.classList.contains('save-saving');
 }
 
 export function getProjectName() {

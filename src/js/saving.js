@@ -1,9 +1,9 @@
 import { getEditor } from "/src/js/codeMirror.js";
 import { db, auth } from "/src/js/firebase.js";
 import { toggleDBGopen } from "/src/js/modalBackground.js";
-import { getProjectName, setProjectName, getProjectId,
-	 setProjectId, getOwns, setOwns, setOwnerId,
-	 makeClean, makeDirty, isDirty } from "/src/js/currentProject.js";
+import { getProjectName, setProjectName, getProjectId, setProjectId,
+	 getOwns, setOwns, setOwnerId, makeClean, makeDirty,
+	 makeSaving, isSaving, isDirty } from "/src/js/currentProject.js";
 import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
 import { errorShake, genericError } from "/src/js/DOMhelpers.js";
 import { makeSafe, debounce } from "/src/js/jsUtils.js";
@@ -193,6 +193,10 @@ async function nameAndSave(code) {
 	if (event.newState == 'closed') {
 	    namingDialog.removeEventListener('toggle', saveDialogToggleHandler);
 	    namingForm.removeEventListener('submit', saveSubmitHandler);
+	    // if we're leaving and haven't successfully saved, revert back to dirty
+	    if (isSaving()){
+		makeDirty();
+	    }
 	}
     }
     
@@ -213,7 +217,7 @@ async function nameAndSave(code) {
 
 async function save() {
     // if no changes since last save, don't do anything
-    if (!isDirty) { return };
+    if (!isDirty()) { return };
     
     const user = auth.currentUser;
     
@@ -221,6 +225,9 @@ async function save() {
 	genericError("Please log in before saving your project");
 	return
     }
+
+    // update UI to indicate we're working on saving
+    makeSaving();
     
     const code = getEditor().getValue();
     
