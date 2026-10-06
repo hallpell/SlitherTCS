@@ -120,8 +120,9 @@ self.sendTurtleData = (e) => {
     self.postMessage({ type: "turtle_graphics", message: e.toJs ? e.toJs() : e });
 }
 
-// code for handling matplotlib plots
+// keeping track of loaded libraries
 let hasPlt = false;
+let hasRequests = false;
 
 self.requestInput = function(inputPrompt) {
     self.postMessage({
@@ -221,6 +222,7 @@ turtle.Screen().reset()`);
 	    }
 
 	    if (event.data.python.includes("matplotlib") && !hasPlt) {
+		hasPlt = true;
 		console.log("Doing matplotlib monkeypatch")
 		await pyodide.runPythonAsync(`
 import matplotlib
@@ -261,6 +263,31 @@ def get_figsize():
   hold = get_graphics_size()
   return (hold[0]/150, hold[1]/150)
 plt.get_figsize = get_figsize`);
+	    }
+
+	    if (event.data.python.includes("requests") && !hasRequests) {
+		hasRequests = true;
+		console.log("Doing requests proxy for ML4K")
+		// python code from Claude Sonnet 5.5
+		await pyodide.runPythonAsync(`import requests
+from urllib.parse import urlparse
+
+PROXY = "https://us-central1-slithertcs-b7d93.cloudfunctions.net/proxy"
+PROXIED_HOSTS = {
+    "machinelearningforkids.co.uk": "ml4k",
+}
+
+_original_request = requests.sessions.Session.request
+
+def _request_with_proxy(self, method, url, *args, **kwargs):
+    parsed = urlparse(url)
+    name = PROXIED_HOSTS.get(parsed.hostname)
+    if name:
+        url = f"{PROXY}/{name}{parsed.path}" + (f"?{parsed.query}" if parsed.query else "")
+    return _original_request(self, method, url, *args, **kwargs)
+
+requests.sessions.Session.request = _request_with_proxy
+`);
 	    }
 	    
 	    pyodide.globals.set("__code_to_evaluate__", event.data.python);
