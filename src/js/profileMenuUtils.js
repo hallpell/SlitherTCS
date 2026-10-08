@@ -7,7 +7,7 @@ import { isDirty } from "/src/js/currentProject.js";
 //   Length of array will equal number of projects in colSnap
 //   Each object will have 'time', 'name', and 'id'
 //   The array will be sorted by the 'time' attributes of the elements
-export function buildTemporallySortedProjects(colSnap) {
+export function buildTemporallySortedProjects(colSnap, numToReturn=10) {
     let tsps = [];
     colSnap.forEach((d) => {
 	const data = d.data();
@@ -31,6 +31,8 @@ export function buildTemporallySortedProjects(colSnap) {
 //   inserts them into the DOM in profileList
 export function insertProjects(projs) {
     const frag = document.createDocumentFragment();
+
+    frag.append(document.createElement("hr"));
     
     projs.forEach((p) => {
 	const li = document.createElement('li');

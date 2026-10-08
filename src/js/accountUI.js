@@ -220,11 +220,25 @@ export function initAccountUI() {
 
 	    // add all user projects to dropdown menu allowing them to load projects
 	    getDocs(collection(db, 'users', user.uid, 'projectNames')).then((colSnapshot) => {
+		// insert <hr> between newProject and signOut
+		document.getElementById("profileList").insertBefore(
+		    document.createElement("hr"),
+		    document.getElementById("signOut"));
 		if (colSnapshot.length === 0) {
 		    return
 		}
 		let tsps = buildTemporallySortedProjects(colSnapshot);
-		insertProjects(tsps);
+
+		// MAGIC NUMBER - intending for 10 once separate "all project modal" is complete
+		// TODO: allow users to configure? Maybe not a good idea?
+		const numDisplayedProjects = 0
+		if (numDisplayedProjects === 0 || numDisplayedProjects >= tsps.length) {
+		    insertProjects(tsps);
+		} else {
+		    console.log(tsps.length)
+		    insertProjects(tsps.slice(0,numDisplayedProjects));
+		}
+		// TODO: Add (scrollable) modal for finding + loading all projects, not just most recent
 	    }).catch((error) => {
 		console.log("Couldn't read projects to make loading bar");
 		console.error(error);
