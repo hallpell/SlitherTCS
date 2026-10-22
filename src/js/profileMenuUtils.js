@@ -89,6 +89,8 @@ export function insertProjectsModal(projs) {
 
     projs.forEach((p) => {
 	const li = document.createElement('li');
+	li.dataset.time = p.time.toMillis();
+	li.dataset.name = p.name;
 	const div = document.createElement('div');
 	const span = document.createElement('span');
 	span.textContent = p.name;

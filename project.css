@@ -175,7 +175,7 @@ h3 {
 }
 
 
-#profileDropdown>ul>hr, #all-project>div>hr {
+#profileDropdown>ul>hr, #all-project>hr {
     margin-top: 4px;
     margin-bottom: 4px;
 }
@@ -184,6 +184,16 @@ h3 {
     padding-top: 2px;
     padding-left: 6px;
     padding-right: 6px;
+}
+
+#all-project-dialog>div {
+    width: auto;
+    margin: 0;
+}
+
+#all-project-sort-options {
+    display: flex;
+    align-items: center;
 }
 
 #all-project-ul>li {

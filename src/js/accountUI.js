@@ -179,6 +179,22 @@ export function initAccountUI() {
 
 	document.getElementById("profileDropdown").hidePopover();
     })
+
+    document.getElementById('chronological').addEventListener("change", (e) => {
+	if (e.target.checked) {
+	    const ul = document.getElementById('all-project-ul');
+	    const items = [...ul.children].sort((a,b) => b.dataset.time - a.dataset.time);
+	    ul.append(...items);
+	}
+    })
+
+    document.getElementById('alphabetical').addEventListener("change", (e) => {
+	if (e.target.checked) {
+	    const ul = document.getElementById('all-project-ul');
+	    const items = [...ul.children].sort((a,b) => a.dataset.name.localeCompare(b.dataset.name))
+	    ul.append(...items);
+	}
+    })
     
     onAuthStateChanged(auth, (user) => {
 	// if user is signing in
@@ -234,7 +250,7 @@ export function initAccountUI() {
 
 		// MAGIC NUMBER - intending for 10 once separate "all project modal" is complete
 		// TODO: allow users to configure? Maybe not a good idea?
-		const numDisplayedProjects = 0
+		const numDisplayedProjects = 10
 		if (numDisplayedProjects === 0 || numDisplayedProjects >= tsps.length) {
 		    insertProjectsProfile(tsps);
 		} else {
@@ -249,7 +265,6 @@ export function initAccountUI() {
 		})
 		document.getElementById("newProject").after(allProjectsLi);
 		insertProjectsModal(tsps);
-		// TODO: Add (scrollable) modal for finding + loading all projects, not just most recent
 	    }).catch((error) => {
 		console.log("Couldn't read projects to make loading bar");
 		console.error(error);
