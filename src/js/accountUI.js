@@ -10,7 +10,8 @@ import { setProjectName, setProjectId, setOwns, setOwnerId,
 	 getProjectId, getOwnerId, isDirty, makeClean } from "/src/js/currentProject.js";
 import { errorShake, confirmDialog } from "/src/js/DOMhelpers.js";
 import { setAutosave } from "/src/js/autosaveState.js";
-import { buildTemporallySortedProjects, insertProjects } from "/src/js/profileMenuUtils.js";
+import { buildTemporallySortedProjects,
+	 insertProjectsProfile, insertProjectsModal } from "/src/js/profileMenuUtils.js";
 import { hideVersion } from "/src/js/versionUI.js";
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
@@ -123,10 +124,12 @@ export function initAccountUI() {
     const loginDialog = document.getElementById("login-dialog");
     const signupDialog = document.getElementById("signup-dialog");
     const passwordResetDialog = document.getElementById("password-reset-dialog");
+    const allProjectDialog = document.getElementById("all-project-dialog");
 
     loginDialog.addEventListener("toggle", toggleDBGopen);
     signupDialog.addEventListener("toggle", toggleDBGopen);
     passwordResetDialog.addEventListener("toggle", toggleDBGopen);
+    allProjectDialog.addEventListener("toggle", toggleDBGopen);
     document.getElementById("generic-error-dialog").addEventListener("toggle", toggleDBGopen);
     document.getElementById("generic-confirmation-dialog").addEventListener("toggle", toggleDBGopen);
 
@@ -233,11 +236,19 @@ export function initAccountUI() {
 		// TODO: allow users to configure? Maybe not a good idea?
 		const numDisplayedProjects = 0
 		if (numDisplayedProjects === 0 || numDisplayedProjects >= tsps.length) {
-		    insertProjects(tsps);
+		    insertProjectsProfile(tsps);
 		} else {
 		    console.log(tsps.length)
-		    insertProjects(tsps.slice(0,numDisplayedProjects));
+		    insertProjectsProfile(tsps.slice(0,numDisplayedProjects));
 		}
+
+		const allProjectsLi = document.createElement("li");
+		allProjectsLi.textContent = "All Projects";
+		allProjectsLi.addEventListener("click", () => {
+		    document.getElementById("all-project-dialog").showPopover();
+		})
+		document.getElementById("newProject").after(allProjectsLi);
+		insertProjectsModal(tsps);
 		// TODO: Add (scrollable) modal for finding + loading all projects, not just most recent
 	    }).catch((error) => {
 		console.log("Couldn't read projects to make loading bar");

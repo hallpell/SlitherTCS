@@ -8,7 +8,7 @@ import { isInvalidDocumentName, logErrors } from "/src/js/firebaseHelpers.js";
 import { errorShake, genericError } from "/src/js/DOMhelpers.js";
 import { makeSafe, debounce } from "/src/js/jsUtils.js";
 import { getAutosave, toggleAutosave } from "/src/js/autosaveState.js";
-import { insertProject } from "/src/js/profileMenuUtils.js";
+import { insertProjectProfile } from "/src/js/profileMenuUtils.js";
 import { setVersion, setMaxVersion } from "/src/js/versionUI.js";
 
 import { doc, collection, addDoc, setDoc, getDoc, runTransaction, serverTimestamp }
@@ -56,6 +56,7 @@ async function createNewProject(uid, projectName, safeProjectName, code) {
 	    transaction.set(nameRef, {
 		projectId: projRef.id,
 		displayName: projectName,
+		currentVersion: 1,
 		createdAt: serverTimestamp(),
 		updatedAt: serverTimestamp()
 	    });
@@ -94,7 +95,8 @@ async function updateProject(uid, projId, projName, code) {
 	await runTransaction(db, async (transaction) => {
 
 	    transaction.set(nameRef, {
-		updatedAt: serverTimestamp()
+		updatedAt: serverTimestamp(),
+		currentVersion: newVersion
 	    }, { merge: true });
 
 	    transaction.set(docRef, {
@@ -164,7 +166,7 @@ async function nameAndSave(code) {
 				   projectId: retVal.projectId,
 				   uid: user.uid }, "", newURL);
 		
-		insertProject(projectName, retVal.projectId);
+		insertProjectProfile(projectName, retVal.projectId);
 		
 		namingDialog.hidePopover();
 	    } else {

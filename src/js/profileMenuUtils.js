@@ -7,7 +7,7 @@ import { isDirty } from "/src/js/currentProject.js";
 //   Length of array will equal number of projects in colSnap
 //   Each object will have 'time', 'name', and 'id'
 //   The array will be sorted by the 'time' attributes of the elements
-export function buildTemporallySortedProjects(colSnap, numToReturn=10) {
+export function buildTemporallySortedProjects(colSnap, numToReturn) {
     let tsps = [];
     colSnap.forEach((d) => {
 	const data = d.data();
@@ -16,8 +16,18 @@ export function buildTemporallySortedProjects(colSnap, numToReturn=10) {
 	    name: data.displayName,
 	    id: data.projectId
 	}
+
+	// all new projects should have this field
+	if (data.currentVersion) {
+	    val.version = data.currentVersion
+	} else {
+	    // have a custom value for older projects without this field
+	    // (some projects have version but don't have that information in projectNames,
+	    //    so we need a special value as opposed to defaulting to 1)
+	    val.version = -1
+	}
 	
-	// insertion sort
+	// insertion sort each element as generated
 	let i = 0;
 	while (i < tsps.length && tsps[i].time < val.time) {
 	    i++;
@@ -29,7 +39,7 @@ export function buildTemporallySortedProjects(colSnap, numToReturn=10) {
 
 // takes the output of buildTemporallySortedProjects and
 //   inserts them into the DOM in profileList
-export function insertProjects(projs) {
+export function insertProjectsProfile(projs) {
     const frag = document.createDocumentFragment();
 
     frag.append(document.createElement("hr"));
@@ -60,7 +70,7 @@ export function insertProjects(projs) {
 }
 
 // this is only for when a user saves a new project, so it must always be the currentUser
-export function insertProject(displayName, projId) {
+export function insertProjectProfile(displayName, projId) {
     const li = document.createElement('li');
     const span = document.createElement('span');
     span.textContent = displayName;
@@ -72,4 +82,51 @@ export function insertProject(displayName, projId) {
     })
 
     document.getElementById("newProject").after(li);
+}
+
+export function insertProjectsModal(projs) {
+    const frag = document.createDocumentFragment();
+
+    projs.forEach((p) => {
+	const li = document.createElement('li');
+	const div = document.createElement('div');
+	const span = document.createElement('span');
+	span.textContent = p.name;
+	const button = document.createElement('button');
+	button.textContent = 'Open ';
+	div.appendChild(span);
+	div.appendChild(button);
+	const input = document.createElement('input');
+	if (p.version > 0) {
+	    button.appendChild(input);
+	    input.type = 'number';
+	    input.min = 1;
+	    input.max = p.version;
+	    input.value = p.version;
+	}
+
+	li.classList.add('userProject');
+
+	// prepend to reverse order
+	frag.prepend(li);
+	li.appendChild(div);
+	li.addEventListener("click", async (e) => {
+	    if (e.target === input) { return };
+	    if (isDirty()) {
+		const conf = await confirmDialog("Your current project has unsaved changes, do you really want to load another project?");
+		if (!conf) {
+		    return;
+		}
+	    }
+	    document.getElementById("all-project-dialog").hidePopover();
+	    if (p.version > 0) {
+		loadFromUIDs(auth.currentUser.uid, p.id, input.value);
+	    } else {
+		loadFromUIDs(auth.currentUser.uid, p.id);
+	    }
+	})
+    })
+
+    const profileList = document.getElementById("all-project-ul");
+    profileList.appendChild(frag);
 }

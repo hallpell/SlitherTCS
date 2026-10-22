@@ -139,6 +139,7 @@ export function loadFromUIDs(userId, projectId, updateState=true, pushState=true
 // allow loading projects if you just know username + projectname
 // returns true if it successfully found UID and projectID and dispatched,
 //   false if the project could not be found
+// versionNum is passed on to loadFromUIDs and handled there - no special handling here needed
 export async function loadFromNames(username, safeProjectName, versionNum) {
     let unSnap = await getDoc(doc(db, "usernames", username));
     if (unSnap.exists()) {

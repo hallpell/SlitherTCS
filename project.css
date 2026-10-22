@@ -167,14 +167,14 @@ h3 {
     border-radius: 5px;
 }
 
-#profileDropdown>ul {
+#profileDropdown>ul, #all-project-ul {
     padding: 5px 0;
     list-style: none;
     min-width: 160px;
     margin: 0;
 }
 
-#profileDropdown>ul>hr {
+#profileDropdown>ul>hr, #all-project>div>hr {
     margin-top: 4px;
     margin-bottom: 4px;
 }
@@ -185,7 +185,24 @@ h3 {
     padding-right: 6px;
 }
 
-#profileDropdown>ul>li:hover {
+#all-project-ul>li {
+    padding-top: 2px;
+    padding-left: 12px;
+    padding-right: 6px;
+}
+
+#all-project-ul>li>div {
+    display: flex;
+    justify-content: space-between;
+}
+
+#all-project-ul>li>div>button>input {
+    width: 4ch;
+    background-color: #2F1885;
+    color: white;
+}
+
+#profileDropdown>ul>li:hover, #all-project-ul>li:hover {
     cursor: pointer;
     background-color: #ccc;
 }
