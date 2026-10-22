@@ -19,7 +19,7 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase
 // pushState will pushState if true (default) or replaceState if false
 // versionNum will specify a version number to load. If omitted, the most recent version will be loaded
 // TODO: continue propagating errors up the chain???
-export function loadFromUIDs(userId, projectId, updateState=true, pushState=true, safeUN, versionNum) {
+export function loadFromUIDs(userId, projectId, versionNum, updateState=true, pushState=true, safeUN) {
     getDoc(doc(db, 'users', userId, 'projects', projectId)).then(async (snap) => {
 	if (snap.exists() && "code" in snap.data()) {
 	    let code;
@@ -147,7 +147,7 @@ export async function loadFromNames(username, safeProjectName, versionNum) {
 	let projSnap = await getDoc(doc(db, "users", uid,
 					"projectNames", safeProjectName));
 	if (projSnap.exists()) {
-	    loadFromUIDs(uid, projSnap.data().projectId, true, false, username, versionNum);
+	    loadFromUIDs(uid, projSnap.data().projectId, versionNum, true, false, username);
 	    return true;
 	}
     }
@@ -187,7 +187,7 @@ export async function loadFromURL() {
 }
 
 export async function loadVersion(versionNum) {
-    loadFromUIDs(getOwnerId(), getProjectId(), false, false, undefined, versionNum);
+    loadFromUIDs(getOwnerId(), getProjectId(), versionNum, false, false, undefined);
 }
 
 export async function initLoad() {
