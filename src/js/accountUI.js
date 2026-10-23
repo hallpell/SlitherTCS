@@ -180,6 +180,10 @@ export function initAccountUI() {
 	document.getElementById("profileDropdown").hidePopover();
     })
 
+    document.getElementById("allProjects").addEventListener("click", () => {
+	document.getElementById("all-project-dialog").showPopover();
+    })
+
     document.getElementById('chronological').addEventListener("change", (e) => {
 	if (e.target.checked) {
 	    const ul = document.getElementById('all-project-ul');
@@ -240,9 +244,6 @@ export function initAccountUI() {
 	    // add all user projects to dropdown menu allowing them to load projects
 	    getDocs(collection(db, 'users', user.uid, 'projectNames')).then((colSnapshot) => {
 		// insert <hr> between newProject and signOut
-		document.getElementById("profileList").insertBefore(
-		    document.createElement("hr"),
-		    document.getElementById("signOut"));
 		if (colSnapshot.length === 0) {
 		    return
 		}
@@ -258,12 +259,6 @@ export function initAccountUI() {
 		    insertProjectsProfile(tsps.slice(0,numDisplayedProjects));
 		}
 
-		const allProjectsLi = document.createElement("li");
-		allProjectsLi.textContent = "All Projects";
-		allProjectsLi.addEventListener("click", () => {
-		    document.getElementById("all-project-dialog").showPopover();
-		})
-		document.getElementById("newProject").after(allProjectsLi);
 		insertProjectsModal(tsps);
 	    }).catch((error) => {
 		console.log("Couldn't read projects to make loading bar");

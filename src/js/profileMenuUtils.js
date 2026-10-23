@@ -42,7 +42,10 @@ export function buildTemporallySortedProjects(colSnap, numToReturn) {
 export function insertProjectsProfile(projs) {
     const frag = document.createDocumentFragment();
 
-    frag.append(document.createElement("hr"));
+    const hr = document.createElement("hr");
+    hr.classList.add('userProject');
+    
+    frag.append(hr);
     
     projs.forEach((p) => {
 	const li = document.createElement('li');
