@@ -5,17 +5,7 @@ export function initTerminalDOM() {
     output.generalAdd = (content, newClass=undefined, newLine=false) => {
 	const wasFocused = ourInput.contains(document.activeElement);
 	if (newLine) {
-	    const newDiv = document.createElement("div");
-	    newDiv.className = 'line';
-	    output.appendChild(newDiv);
-	    const p = ourInput.parentElement;
-	    newDiv.appendChild(ourInput);
-	    // if we're leaving behind a div with just an empty span
-	    if (p.children.length == 1 &&
-		p.firstElementChild.tagName == "SPAN" &&
-		p.firstElementChild.childNodes.length == 0) {
-		p.remove();
-	    }
+	    output.newLine();
 	}
 	
 	let newText = document.createElement("span");
@@ -23,11 +13,39 @@ export function initTerminalDOM() {
 	if (newClass) {
 	    newText.className = newClass;
 	}
-	
+
+	const oldHeight = output.lastElementChild.offsetHeight;
+
 	output.lastElementChild.insertBefore(newText, ourInput);
+	
+	// if adding this changes the height, it's wrapping and should have its own line
+	//   this should only happen if newLine == false
+	if (output.lastElementChild.offsetHeight !== oldHeight) {
+	    output.newLine();
+	    output.lastElementChild.insertBefore(newText, ourInput);
+	}
+	
+	// if we don't have sufficient space for the input, make a new line for it
+	if (ourInput.offsetWidth < 40) {
+	    output.newLine();
+	}
 	document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
 	if (wasFocused) {
 	    ourInput.focus();
+	}
+    }
+
+    output.newLine = () => {
+	const newDiv = document.createElement("div");
+	newDiv.className = 'line';
+	output.append(newDiv);
+	const p = ourInput.parentElement;
+	newDiv.appendChild(ourInput);
+	// if we're leaving behind a div with just an empty span
+	if (p.children.length == 1 &&
+	    p.firstElementChild.tagName == "SPAN" &&
+	    p.firstElementChild.childNodes.length == 0) {
+	    p.remove();
 	}
     }
     
