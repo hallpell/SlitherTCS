@@ -290,6 +290,19 @@ button {
     color: white;
 }
 
+select {
+    border-radius: 2px;
+}
+
+#cmTheme {
+    background-color: #466669;
+    color: white;
+}
+
+#terminalTheme {
+    background-color: #80c3bc;
+}
+
 .running-disabled {
     cursor: not-allowed;
     background-color: #7F6895;
